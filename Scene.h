@@ -5,5 +5,6 @@ public:
 	Scene();
 	virtual ~Scene();
 	virtual void render(float delta);
+	virtual void onKey(char c);
 };
 

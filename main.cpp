@@ -6,6 +6,7 @@
 #include <GL/freeglut.h>
 #include <ctime>
 #include "Scene.h"
+#include "lista1.h"
 
 using namespace std;
 Scene *s;
@@ -45,6 +46,43 @@ void pointLocationTest(){
 	for (int i = 0; i < 7; i++)
 		printf("%d\n", findInSegment(testPoints[i], a, b));
 }
+
+class ConvexityScene : public Scene{
+public:
+	ConvexityScene(){
+		
+		glOrtho(-SIZE, SIZE, -SIZE, SIZE, -1, 1);
+		u = vec2(2, 1);
+		v = vec2(1, 2);
+	}
+
+	void render(float delta){
+		glBegin(GL_LINES);
+
+		glColor3f(1, 1, 1);
+		glVertex2f(0, 0);
+		glVertex2fv(u.data());
+		glVertex2f(0, 0);
+		glVertex2fv(v.data());
+		w = vec2((mouseX - 200) / 100.0f * SIZE, (mouseY - 200) / 100.0f * SIZE);
+		Convexidade c = getConvexity(u, v, w);
+		glColor3f(c == NAO, c == SIM, 0);
+		glVertex2f(0, 0);
+		glVertex2fv(w.data());
+		glEnd();
+	}
+
+	void onKey(char c){
+		const float OFFSET = 3 * 3.14f / 180.0f;
+		if (c == '+')
+			v = mat3::rotation(OFFSET) * v;
+		if (c == '-')
+			v = mat3::rotation(-OFFSET) * v;
+	}
+
+	const float SIZE = 2;
+	vec2 u, v, w;
+};
 
 class TriangleScene : public Scene{
 public:
@@ -193,6 +231,9 @@ void onKeyboard(unsigned char c, int x, int y){
 	const unsigned char ESC = 27;
 	if (c == ESC)
 		exit(0);
+	else{
+		s->onKey(c);
+	}
 }
 
 void onMouse(int a, int b, int x, int y){
@@ -222,7 +263,8 @@ void triangleLocationTest(){
 	glOrtho(-2, 2, -2, 2, -2, 2);
 	
 	//s = new TriangleScene();
-	s = new PolygonScene();
+	//s = new PolygonScene();
+	s = new ConvexityScene();
 	
 	glutMainLoop();
 }

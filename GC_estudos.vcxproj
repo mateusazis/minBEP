@@ -144,12 +144,14 @@
   <ItemGroup>
     <ClCompile Include="angel.cpp" />
     <ClCompile Include="ConvexHull.cpp" />
+    <ClCompile Include="lista1.cpp" />
     <ClCompile Include="Localization.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="angel.h" />
+    <ClInclude Include="lista1.h" />
     <ClInclude Include="problems.h" />
     <ClInclude Include="Scene.h" />
   </ItemGroup>

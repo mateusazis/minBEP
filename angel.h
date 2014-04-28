@@ -13,6 +13,8 @@ public:
 
 	const float* data();
 
+	float dot(vec2 other);
+	float crossMag(vec2 other);
 	int crossSign(vec2 other);
 
 private:

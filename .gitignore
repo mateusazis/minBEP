@@ -9,3 +9,4 @@
 *.pdb
 *.tlog
 /x64
+*.opensdf

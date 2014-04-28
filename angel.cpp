@@ -30,8 +30,16 @@ const float* vec2::data(){
 	return v;
 }
 
+float vec2::dot(vec2 other){
+	return x() * other.x() + y() * other.y();
+}
+
+float vec2::crossMag(vec2 other){
+	return x() * other.y() - y() * other.x();
+}
+
 int vec2::crossSign(vec2 other){
-	float cross = x() * other.y() - y() * other.x();
+	float cross = crossMag(other);
 	if (cross > 0)
 		return 1;
 	if (cross == 0)
