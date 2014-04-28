@@ -1,0 +1,11 @@
+*.sdf
+*.filters
+*.user
+*.log
+*.suo
+*.obj
+*.exe
+*.ilk
+*.pdb
+*.tlog
+/x64
