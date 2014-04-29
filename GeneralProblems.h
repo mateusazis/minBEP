@@ -14,4 +14,6 @@ TriangleLocalization findInTriangle(vec2 point, vec2 p1, vec2 p2, vec2 p3);
 
 bool findInPolygon(vec2 point, vec2* polygonPoints, int count);
 
+bool segmentIntersects(vec2 seg1Start, vec2 seg1End, vec2 seg2Start, vec2 seg2End);
+
 #endif

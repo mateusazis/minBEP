@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <vector>
-#include "problems.h"
+#include "GeneralProblems.h"
 #include <GL/freeglut.h>
 #include <ctime>
 #include "Scene.h"
@@ -82,6 +82,61 @@ public:
 
 	const float SIZE = 2;
 	vec2 u, v, w;
+};
+
+class DisjointsTriangles : public Scene{
+public:
+	DisjointsTriangles(){
+		const float DEGREES_120 = 3.14f * 2.0f / 3.0f;
+		triA[0] = triB[0] = vec2(0, 1);
+		triA[1] = triB[1] = mat3::rotation(DEGREES_120) * triA[0];
+		triA[2] = triB[2] = mat3::rotation(2 * DEGREES_120) * triA[0];
+		glEnable(GL_VERTEX_ARRAY);
+	}
+
+	void render(float delta){
+		glBegin(GL_TRIANGLES);
+		glColor3f(1, 1, 1);
+		glVertex2fv(triA[0].data());
+		glVertex2fv(triA[1].data());
+		glVertex2fv(triA[2].data());
+		bool disjoints = disjointsTriangles(triA, triB);
+		glColor3f(!disjoints, disjoints, 0);
+		glVertex2fv(triB[0].data());
+		glVertex2fv(triB[1].data());
+		glVertex2fv(triB[2].data());
+		glEnd();
+	}
+
+	void onKey(char c){
+		const float trans = 0.1f;
+		const float rot = 3 * 3.14f / 180.0f;
+		mat3 m = mat3::identity();
+		switch (c){
+		case 'w':
+			m = mat3::translation(0, trans);
+			break;
+		case 'a':
+			m = mat3::translation(-trans, 0);
+			break;
+		case 's':
+			m = mat3::translation(0, -trans);
+			break;
+		case 'd':
+			m = mat3::translation(trans, 0);
+			break;
+		case '+':
+				m = mat3::rotation(rot);
+				break;
+		case '-':
+			m = mat3::rotation(-rot);
+			break;
+		}
+		for (int i = 0; i < 3; i++)
+			triB[i] = m * triB[i];
+	}
+	const float SIZE = 2;
+	vec2 triA[3], triB[3];
 };
 
 class TriangleScene : public Scene{
@@ -264,7 +319,8 @@ void triangleLocationTest(){
 	
 	//s = new TriangleScene();
 	//s = new PolygonScene();
-	s = new ConvexityScene();
+	//s = new ConvexityScene();
+	s = new DisjointsTriangles();
 	
 	glutMainLoop();
 }

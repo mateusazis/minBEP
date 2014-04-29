@@ -1,4 +1,4 @@
-#include "problems.h"
+#include "GeneralProblems.h"
 
 using namespace std;
 

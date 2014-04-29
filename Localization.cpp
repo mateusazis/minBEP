@@ -1,4 +1,4 @@
-#include "problems.h"
+#include "GeneralProblems.h"
 #include <cmath>
 
 SegmentLocalization findInSegment(vec2 point, vec2 a, vec2 b){

@@ -1,0 +1,13 @@
+Primitivas geométricas
+4 OK
+Polígonos
+1
+2
+4
+Complexidade
+Nenhum
+Probelmas fundamentais
+1 ADAPTAR
+2 OK
+3
+4

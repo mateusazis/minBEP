@@ -101,13 +101,22 @@ mat3 mat3::rotation(float angle){
 	return resp;
 }
 
+mat3 mat3::translation(float x, float y){
+	mat3 resp = identity();
+
+	resp.at(0, 2) = x;
+	resp.at(1, 2) = y;
+
+	return resp;
+}
+
 const float* mat3::data(){
 	return &(v[0][0]);
 }
 
 vec2 operator *(mat3 m, vec2 v){
-	float x = m.at(0, 0) * v.x() + m.at(0, 1) * v.y();
-	float y = m.at(1, 0) * v.x() + m.at(1, 1) * v.y();
+	float x = m.at(0, 0) * v.x() + m.at(0, 1) * v.y() + m.at(0, 2) * 1; //w hardcoded as 1
+	float y = m.at(1, 0) * v.x() + m.at(1, 1) * v.y() + m.at(1, 2) * 1;
 	return vec2(x, y);
 }
 

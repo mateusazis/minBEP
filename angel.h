@@ -33,6 +33,7 @@ public:
 
 	static mat3 identity();
 	static mat3 rotation(float angle);
+	static mat3 translation(float x, float y);
 
 	float & at(int row, int column);
 

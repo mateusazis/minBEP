@@ -1,4 +1,5 @@
 #include "lista1.h"
+#include "GeneralProblems.h"
 #include <cmath>
 #include <cstdio>
 
@@ -23,3 +24,14 @@ Convexidade getConvexity(vec2 u, vec2 v, vec2 w){
 }
 
 //Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 2
+bool disjointsTriangles(vec2 tri1[3], vec2 tri2[3]){
+	for (int i = 0; i < 3; i++){
+		vec2 a = tri1[i], b = tri1[(i + 1) % 3];
+		for (int j = 0; j < 3; j++){
+			vec2 c = tri2[j], d = tri2[(j + 1) % 3];
+			if (segmentIntersects(a, b, c, d))
+				return false;
+		}
+	}
+	return true;
+}
