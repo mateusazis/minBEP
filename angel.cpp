@@ -51,6 +51,12 @@ float vec2::magnitude(){
 	return sqrt(v[0] * v[0] + v[1] * v[1]);
 }
 
+float vec2::sqrDistance(vec2 other){
+	float diffX = other.x() - x(),
+		diffY = other.y() - y();
+	return diffX * diffX + diffY * diffY;
+}
+
 vec2 operator +(vec2 v, vec2 other){
 	return vec2(v.x() + other.x(), v.y() + other.y());
 }

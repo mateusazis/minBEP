@@ -16,6 +16,7 @@ public:
 	float dot(vec2 other);
 	float crossMag(vec2 other);
 	int crossSign(vec2 other);
+	float sqrDistance(vec2 other);
 
 private:
 	float v[2];

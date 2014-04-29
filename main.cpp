@@ -259,6 +259,48 @@ public:
 	unsigned char *b;
 };
 
+class ClosestPairScene : public Scene{
+public:
+	ClosestPairScene() : pairFirst(3), pairSecond(5){
+		glMatrixMode(GL_PROJECTION);
+		glOrtho(0, 200, 0, 200, -1, 1);
+		
+		randomize();
+		glPointSize(5);
+	}
+
+	void render(float delta){
+		glColor3f(1, 1, 1);
+		
+		glBegin(GL_POINTS);
+		const int pointCount = sizeof(points) / sizeof(vec2);
+		for (int i = 0; i < pointCount; i++){
+			bool belongsToClosest = i == pairFirst || i == pairSecond;
+			glColor3f(1, !belongsToClosest, !belongsToClosest);
+			glVertex2fv(points[i].data());
+		}
+		glEnd();
+	}
+
+	void randomize(){
+		const int pointCount = sizeof(points) / sizeof(vec2);
+		for (int i = 0; i < pointCount; i++){
+			points[i] = vec2(random() * 200, random() * 200);
+		}
+		findClosestPair(points, pointCount, &pairFirst, &pairSecond);
+	}
+
+	void onKey(char c){
+		if (c == 'a'){
+			randomize();
+		}
+	}
+
+	vec2 points[50];
+	int pairFirst, pairSecond;
+};
+
+
 
 float timeDiff;
 
@@ -320,7 +362,8 @@ void triangleLocationTest(){
 	//s = new TriangleScene();
 	//s = new PolygonScene();
 	//s = new ConvexityScene();
-	s = new DisjointsTriangles();
+	//s = new DisjointsTriangles();
+	s = new ClosestPairScene();
 	
 	glutMainLoop();
 }
