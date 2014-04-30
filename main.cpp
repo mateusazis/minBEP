@@ -296,7 +296,7 @@ public:
 		}
 	}
 
-	vec2 points[50];
+	vec2 points[11];
 	int pairFirst, pairSecond;
 };
 

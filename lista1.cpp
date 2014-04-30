@@ -37,11 +37,14 @@ bool disjointsTriangles(vec2 tri1[3], vec2 tri2[3]){
 	return true;
 }
 
+//Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 3
+
+//Classe auxiliar, que armazena uma referência para um vetor e o índice do array ao qual ele pertencia.
 class PointInfo{
 public:
 	PointInfo(){}
-	PointInfo(vec2 *vec, int pos) : v(vec), originalPosition(pos){	}
-	PointInfo(PointInfo &other) : v(other.v), originalPosition(other.originalPosition){	}
+	PointInfo(vec2 *vec, int pos) : v(vec), index(pos){	}
+	PointInfo(PointInfo &other) : v(other.v), index(other.index){	}
 
 	float x(){
 		return v->x();
@@ -64,61 +67,47 @@ public:
 		return 1;
 	}
 	vec2 *v;
-	int originalPosition;
+	int index;
 };
 
-
-int findNearPoints(PointInfo* allPoints, vec2 reference, int start, int end, int* dest, float maxDist, bool searchLeft){
+/*Procura pontos que estejam à esquerda ou à direita de reference, 
+usando uma distância máxima de maxDist no eixo X e 2*maxDist no Y*/
+static int findClosePoints(PointInfo* allPoints, vec2 reference, int start, int end, int* dest, float maxDist, bool searchLeft){
 	int count = 0;
-	int i = searchLeft ? end : start;
-	int offset = searchLeft ? -1 : 1;
-	int last = searchLeft ? start - 1: end + 1;
+	int i = searchLeft ? end : start; //índice do primeiro elemento
+	int increment = searchLeft ? -1 : 1;
+	int last = searchLeft ? start - 1 : end + 1; //primeiro índice inválido após o último elemento
 	PointInfo candidate;
-	//i += offset;
 	while (i != last){
 		candidate = allPoints[i];
 		float distX = abs(candidate.x() - reference.x()),
 			distY = abs(candidate.y() - reference.y());
-		if ((distX <= maxDist) && (distY <= 2 * maxDist))
+		if (distX <= maxDist && distY <= 2 * maxDist)
 			dest[count++] = i;
-		
-		i += offset;
+
+		i += increment;
 	}
 	return count;
 }
 
-//Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 3
-static void _findClosestPair(PointInfo *points, int start, int end, int *index1, int *index2, int *aux1, int *aux2){
+/*Retorna a menor distância entre 2 pontos de um subgrupo.
+Coloca no índice de saída os índices desses pontos.*/
+static float _findClosestPair(PointInfo *points, int start, int end, int *index1, int *index2, int *aux1, int *aux2){
 	int len = end - start + 1;
-	if (len == 2)
-	{
-		*index1 = start;
-		*index2 = end;
-	}
-	else if (len == 3){
-		float dist1 = points[start].sqrDistance(points[start + 1]),
-			dist2 = points[start].sqrDistance(points[end]),
-			dist3 = points[start+1].sqrDistance(points[end]);
-		if (dist1 < dist2 && dist1 < dist3){
-			*index1 = start;
-			*index2 = start + 1;
-		}
-		else if (dist2 < dist1 && dist2 < dist3){
-			*index1 = start;
-			*index2 = end;
-		}
-		else {
-			*index1 = start + 1;
-			*index2 = end;
-		}
+	if (len == 1){ 
+		/*No caso de um elemento, retorna distância infinita em vez de 0, 
+		para que sempre seja pareado com algum ponto em outro grupo.*/
+		*index1 = *index2 = start;
+		return HUGE_VALF;
 	}
 	else {
 		int middle = (start + end) / 2;
 		int resp1i, resp1j, resp2i, resp2j;
-		_findClosestPair(points, start, middle, &resp1i, &resp1j, aux1, aux2);
-		_findClosestPair(points, middle + 1, end, &resp2i, &resp2j, aux1, aux2);
-		float best1 = points[resp1i].sqrDistance(points[resp1j]);
-		float best2 = points[resp2i].sqrDistance(points[resp2j]);
+
+		//Recursivamente, descobre os pares mais próximos nos grupos à esquerda e à direita
+		float best1 = _findClosestPair(points, start, middle, &resp1i, &resp1j, aux1, aux2);
+		float best2 = _findClosestPair(points, middle + 1, end, &resp2i, &resp2j, aux1, aux2);
+
 		int respi, respj;
 		float best;
 		if (best1 < best2)	{
@@ -127,10 +116,13 @@ static void _findClosestPair(PointInfo *points, int start, int end, int *index1,
 		else {
 			respi = resp2i; respj = resp2j; best = best2;
 		}
-		vec2 reference = *(points[middle].v);
-		int sizeLeft =  findNearPoints(points, reference,      start, middle, aux1, best, true);
-		int sizeRight = findNearPoints(points, reference, middle + 1,    end, aux2, best, false);
 
+		//encontra os pontos à esquerda e à direita que são candidatos a estarem mais próximos
+		vec2 reference = *(points[middle].v);
+		int sizeLeft =  findClosePoints(points, reference,      start, middle, aux1, best, true);
+		int sizeRight = findClosePoints(points, reference, middle + 1,    end, aux2, best, false);
+
+		//verifica se algum deles está mais próximo
 		for (int i = 0; i < sizeLeft; i++){
 			PointInfo & pi = points[aux1[i]];
 			for (int j = 0; j < sizeRight; j++){
@@ -145,24 +137,27 @@ static void _findClosestPair(PointInfo *points, int start, int end, int *index1,
 		}
 		*index1 = respi; *index2 = respj;
 	}
+	return points[*index1].sqrDistance(points[*index2]);
 }
-
 
 //Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 3
 void findClosestPair(vec2 *points, int count, int *index1, int *index2){
-	PointInfo* copy = new PointInfo[count];
-
+	//Vetores auxiliares, para guardar os índices dos pontos nos subgrupos.
 	int *aux1 = new int[count],
 		*aux2 = new int[count];
+
+	//Cria e ordena uma cópia dos pontos, preservando os índices iniciais
+	PointInfo* copy = new PointInfo[count];
 	for (int i = 0; i < count; i++)
 		copy[i] = PointInfo(points+i, i);
 	qsort(copy, count, sizeof(PointInfo), PointInfo::compareX);
-	_findClosestPair(copy, 0, count - 1, index1, index2, aux1, aux2);
-	//printf("i1 %d i2 %d\n", *index1, *index2);
-	*index1 = copy[*index1].originalPosition;
-	*index2 = copy[*index2].originalPosition;
-	delete[] copy, aux1, aux2;
-	/**index1 = 1;
-	*index2 = 10;*/
+	
+	int a, b; //índices no array ordenado
+	_findClosestPair(copy, 0, count - 1, &a, &b, aux1, aux2);
+	
+	//Recupera os índices no array de entrada
+	*index1 = copy[a].index;
+	*index2 = copy[b].index;
 
+	delete[] copy, aux1, aux2;
 }
