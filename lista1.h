@@ -3,6 +3,7 @@
 
 #include "angel.h"
 #include <utility>
+#include <vector>
 
 enum Convexidade {ERRO, SIM, NAO};
 
@@ -14,5 +15,8 @@ bool disjointsTriangles(vec2 tri1[3], vec2 tri2[3]);
 
 //Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 3
 std::pair<int, int> findClosestPair(vec2 *points, int count);
+
+//Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 4
+std::vector<int> incrementalTriangulate(vec2 *points, int count);
 
 #endif

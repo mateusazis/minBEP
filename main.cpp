@@ -300,6 +300,64 @@ public:
 	pair<int, int> closetsPair;
 };
 
+class TriangulationScene : public Scene{
+public:
+	TriangulationScene(){
+		glMatrixMode(GL_PROJECTION);
+
+		randomize();
+	}
+
+	void render(float delta){
+		glColor3f(1, 1, 1);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glBegin(GL_POLYGON);
+		glColor3f(1, 1, 1);
+		for (int i = 0; i < pointCount; i++){
+			glVertex2fv(points[i].data());
+		}
+		glEnd();
+
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
+		glBegin(GL_TRIANGLES);
+		glColor3f(1, 0, 0);
+		for (int i = 0; i < triangles.size(); i++){
+			glVertex2fv(points[triangles[i]].data());
+		}
+		glEnd();
+	}
+
+	void randomize(){
+		vec2 v[] = {
+			vec2(0, 0),
+			vec2(0, 1),
+			vec2(1, 1),
+			vec2(2, 0.5f),
+			vec2(1, 0),
+			vec2(1.5f, -1),
+			vec2(-1, -1),
+		};
+		pointCount = sizeof(v) / sizeof(vec2);
+		points = new vec2[pointCount];
+		memcpy(points, v, sizeof(v));
+		triangles = incrementalTriangulate(points, pointCount);
+		printf("Got %d vertices\n", triangles.size());
+	}
+
+	void onKey(char c){
+		if (c == 'a'){
+			randomize();
+		}
+	}
+
+	vec2 *points;
+	int pointCount;
+	vector<int> triangles;
+};
+
 
 
 float timeDiff;
@@ -363,7 +421,8 @@ void triangleLocationTest(){
 	//s = new PolygonScene();
 	//s = new ConvexityScene();
 	//s = new DisjointsTriangles();
-	s = new ClosestPairScene();
+	//s = new ClosestPairScene();
+	s = new TriangulationScene();
 	
 	glutMainLoop();
 }

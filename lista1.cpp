@@ -8,7 +8,7 @@ using namespace std;
 
 //Lista 1 - Exercícios de Primitivas Geométricas - Questão 4
 Convexidade getConvexity(vec2 u, vec2 v, vec2 w){
-	float uv = u.crossSign(v);
+	int uv = u.crossSign(v);
 	if (uv == 0) //colineares
 		return ERRO;
 	
@@ -45,7 +45,7 @@ class PointInfo{
 public:
 	PointInfo(){}
 	PointInfo(vec2 *vec, int pos) : v(vec), index(pos){	}
-	PointInfo(PointInfo &other) : v(other.v), index(other.index){	}
+	PointInfo(const PointInfo &other) : v(other.v), index(other.index){	}
 
 	float x(){
 		return v->x();
@@ -161,4 +161,56 @@ std::pair<int, int> findClosestPair(vec2 *points, int count){
 	delete[] copy, aux1, aux2;
 
 	return resp;	
+}
+
+//Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 4
+static bool isCenterOfEar(vector<PointInfo> v, int i){
+	int size = v.size();
+	int previous = i - 1;
+	if (previous < 0)
+		previous += size;
+	int next = (i + 1) % size;
+
+	vec2 vPrevious = *v[previous].v,
+		vI = *v[i].v,
+		vNext = *v[next].v;
+
+	if ((vPrevious - vI).crossSign(vNext - vI) < 0)
+		return false;
+
+	for (int j = (next + 1) % size; j != previous; j = (j + 1) % size){
+		TriangleLocalization l = findInTriangle(*v[j].v, vPrevious, vI, vNext);
+		if (l == INSIDE)
+			return false;
+	}
+	return true;
+}
+
+/*
+Nota: vértices do polígono devem estar no sentido horário!
+*/
+std::vector<int> incrementalTriangulate(vec2 *points, int count){
+	std::vector<int> resp;
+
+	//Cria uma cópia dos vértices, salvando os índices originais
+	vector<PointInfo> vertices;
+	for (int i = 0; i < count; i++)
+		vertices.push_back(PointInfo(points + i, i));
+
+	for (int i = 0; i < vertices.size(); i++){
+		if (isCenterOfEar(vertices, i)){
+			//Sempre que um vértice, o anterior e o posterior formarem uma orelha, remover esse vértice do polígono.
+			int previous = i - 1;
+			if (previous < 0)
+				previous += vertices.size();
+			int next = (i + 1) % vertices.size();
+			resp.push_back(vertices[previous].index);
+			resp.push_back(vertices[i].index);
+			resp.push_back(vertices[next].index);
+			vertices.erase(vertices.begin() + i);
+			i--;
+		}
+	}
+
+	return resp;
 }
