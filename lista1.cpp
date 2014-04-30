@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstring>
 
+using namespace std;
 
 //Lista 1 - Exercícios de Primitivas Geométricas - Questão 4
 Convexidade getConvexity(vec2 u, vec2 v, vec2 w){
@@ -140,8 +141,7 @@ static float _findClosestPair(PointInfo *points, int start, int end, int *index1
 	return points[*index1].sqrDistance(points[*index2]);
 }
 
-//Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 3
-void findClosestPair(vec2 *points, int count, int *index1, int *index2){
+std::pair<int, int> findClosestPair(vec2 *points, int count){
 	//Vetores auxiliares, para guardar os índices dos pontos nos subgrupos.
 	int *aux1 = new int[count],
 		*aux2 = new int[count];
@@ -156,8 +156,9 @@ void findClosestPair(vec2 *points, int count, int *index1, int *index2){
 	_findClosestPair(copy, 0, count - 1, &a, &b, aux1, aux2);
 	
 	//Recupera os índices no array de entrada
-	*index1 = copy[a].index;
-	*index2 = copy[b].index;
+	pair<int, int> resp(copy[a].index, copy[b].index);
 
 	delete[] copy, aux1, aux2;
+
+	return resp;	
 }

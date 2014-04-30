@@ -261,7 +261,7 @@ public:
 
 class ClosestPairScene : public Scene{
 public:
-	ClosestPairScene() : pairFirst(3), pairSecond(5){
+	ClosestPairScene(){
 		glMatrixMode(GL_PROJECTION);
 		glOrtho(0, 200, 0, 200, -1, 1);
 		
@@ -275,7 +275,7 @@ public:
 		glBegin(GL_POINTS);
 		const int pointCount = sizeof(points) / sizeof(vec2);
 		for (int i = 0; i < pointCount; i++){
-			bool belongsToClosest = i == pairFirst || i == pairSecond;
+			bool belongsToClosest = i == closetsPair.first || i == closetsPair.second;
 			glColor3f(1, !belongsToClosest, !belongsToClosest);
 			glVertex2fv(points[i].data());
 		}
@@ -287,7 +287,7 @@ public:
 		for (int i = 0; i < pointCount; i++){
 			points[i] = vec2(random() * 200, random() * 200);
 		}
-		findClosestPair(points, pointCount, &pairFirst, &pairSecond);
+		closetsPair = findClosestPair(points, pointCount);
 	}
 
 	void onKey(char c){
@@ -297,7 +297,7 @@ public:
 	}
 
 	vec2 points[11];
-	int pairFirst, pairSecond;
+	pair<int, int> closetsPair;
 };
 
 
