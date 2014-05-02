@@ -302,24 +302,25 @@ public:
 
 class TriangulationScene : public Scene{
 public:
-	TriangulationScene(){
+	TriangulationScene() : points(NULL), pointCount(0){
 		glMatrixMode(GL_PROJECTION);
-
-		randomize();
+		glOrtho(0, 200, 0, 200, -1, 1);
+		//randomize();
 	}
 
 	void render(float delta){
 		glColor3f(1, 1, 1);
+		GLenum mode = pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
+
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glBegin(GL_POLYGON);
+		glBegin(mode);
 		glColor3f(1, 1, 1);
 		for (int i = 0; i < pointCount; i++){
 			glVertex2fv(points[i].data());
 		}
 		glEnd();
-
-
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		
 
 
 		glBegin(GL_TRIANGLES);
@@ -330,27 +331,11 @@ public:
 		glEnd();
 	}
 
-	void randomize(){
-		vec2 v[] = {
-			vec2(0, 0),
-			vec2(0, 1),
-			vec2(1, 1),
-			vec2(2, 0.5f),
-			vec2(1, 0),
-			vec2(1.5f, -1),
-			vec2(-1, -1),
-		};
-		pointCount = sizeof(v) / sizeof(vec2);
-		points = new vec2[pointCount];
-		memcpy(points, v, sizeof(v));
+	void onMouseDown(){
+		points = (vec2*)realloc(points, sizeof(vec2) * (pointCount + 1));
+		points[pointCount] = vec2((mouseX), mouseY);
+		pointCount++;
 		triangles = incrementalTriangulate(points, pointCount);
-		printf("Got %d vertices\n", triangles.size());
-	}
-
-	void onKey(char c){
-		if (c == 'a'){
-			randomize();
-		}
 	}
 
 	vec2 *points;
@@ -391,8 +376,9 @@ void onKeyboard(unsigned char c, int x, int y){
 	}
 }
 
-void onMouse(int a, int b, int x, int y){
-	
+void onMouse(int button, int pressed, int x, int y){
+	if (pressed == 1)
+		s->onMouseDown();
 }
 
 void onMouse2(int x, int y){

@@ -15,3 +15,5 @@ void Scene::render(float delta)
 }
 
 void Scene::onKey(char c){}
+
+void Scene::onMouseDown(){}

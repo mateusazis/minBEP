@@ -2,12 +2,12 @@ Primitivas geométricas
 4 OK
 Polígonos
 1
-2
-4
+2 OK, usar a triangulação velha
+4 OK, mesmo do anterior
 Complexidade
 Nenhum
 Probelmas fundamentais
 1 ADAPTAR
 2 OK
 3 OK
-4
+4 OK

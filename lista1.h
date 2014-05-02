@@ -19,4 +19,7 @@ std::pair<int, int> findClosestPair(vec2 *points, int count);
 //Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 4
 std::vector<int> incrementalTriangulate(vec2 *points, int count);
 
+//Lista 1 - Exercícios sobre Polígonos - Questões 2 e 4
+std::vector<int> earCuttingTriangulate(vec2 *points, int count);
+
 #endif
