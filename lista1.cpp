@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 using namespace std;
 
@@ -164,53 +165,179 @@ std::pair<int, int> findClosestPair(vec2 *points, int count){
 }
 
 //Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 4
-static bool isCenterOfEar(vector<PointInfo> v, int i){
-	int size = v.size();
-	int previous = i - 1;
-	if (previous < 0)
-		previous += size;
-	int next = (i + 1) % size;
-
-	vec2 vPrevious = *v[previous].v,
-		vI = *v[i].v,
-		vNext = *v[next].v;
-
-	if ((vPrevious - vI).crossSign(vNext - vI) < 0)
-		return false;
-
-	for (int j = (next + 1) % size; j != previous; j = (j + 1) % size){
-		TriangleLocalization l = findInTriangle(*v[j].v, vPrevious, vI, vNext);
-		if (l == INSIDE)
-			return false;
+//static bool isCenterOfEar(vector<PointInfo> v, int i){
+//	int size = v.size();
+//	int previous = i - 1;
+//	if (previous < 0)
+//		previous += size;
+//	int next = (i + 1) % size;
+//
+//	vec2 vPrevious = *v[previous].v,
+//		vI = *v[i].v,
+//		vNext = *v[next].v;
+//
+//	if ((vPrevious - vI).crossSign(vNext - vI) < 0)
+//		return false;
+//
+//	for (int j = (next + 1) % size; j != previous; j = (j + 1) % size){
+//		TriangleLocalization l = findInTriangle(*v[j].v, vPrevious, vI, vNext);
+//		if (l == INSIDE)
+//			return false;
+//	}
+//	return true;
+//}
+//
+///*
+//Nota: vértices do polígono devem estar no sentido horário!
+//*/
+//std::vector<int> incrementalTriangulate(vec2 *points, int count){
+//	std::vector<int> resp;
+//
+//	//Cria uma cópia dos vértices, salvando os índices originais
+//	vector<PointInfo> vertices;
+//	for (int i = 0; i < count; i++)
+//		vertices.push_back(PointInfo(points + i, i));
+//
+//	for (int i = 0; i < vertices.size(); i++){
+//		if (isCenterOfEar(vertices, i)){
+//			//Sempre que um vértice, o anterior e o posterior formarem uma orelha, remover esse vértice do polígono.
+//			int previous = i - 1;
+//			if (previous < 0)
+//				previous += vertices.size();
+//			int next = (i + 1) % vertices.size();
+//			resp.push_back(vertices[previous].index);
+//			resp.push_back(vertices[i].index);
+//			resp.push_back(vertices[next].index);
+//			vertices.erase(vertices.begin() + i);
+//			i--;
+//		}
+//	}
+//
+//	return resp;
+//}
+int findLowestY(vec2* points, vector<int> & polygon){
+	int resp = 0;
+	float minY = points[polygon[0]].y();
+	for (int i = 1; i < polygon.size(); i++){
+		if (points[polygon[i]].y() < minY){
+			minY = points[polygon[i]].y();
+			resp = i;
+		}
 	}
-	return true;
+	return resp;
+}
+
+static float det(float m[4]){
+	return m[0] * m[3] - m[1] * m[2];
+}
+
+pair<float,float> basisChange(vec2 v, vec2 axis1, vec2 axis2){
+	float mat[4] = {
+		axis1.x(), axis2.x(),
+		axis1.y(), axis2.y()
+	};
+	float delta = det(mat);
+	mat[0] = v.x();
+	mat[2] = v.y();
+	float l1 = det(mat) / delta;
+	mat[0] = axis1.x(), mat[2] = axis1.y();
+	mat[1] = v.x(), mat[3] = v.y();
+	float l2 = det(mat) / delta;
+	return pair<float, float>(l1, l2);
+}
+
+void triangulate(vector<int> & resp, vec2* points, vector<int> polygon, int totalPointCount){
+	int pointCount = polygon.size();
+	printf("called for %d points\n", pointCount);
+	if (pointCount <= 3){
+		if (pointCount == 3){
+			resp.push_back(polygon[0]);
+			resp.push_back(polygon[1]);
+			resp.push_back(polygon[2]);
+		}
+		return;
+	}
+		
+	int lowestYIndex = findLowestY(points, polygon);
+	int nextIndex = (lowestYIndex + 1) % pointCount;
+	int previousIndex = lowestYIndex - 1;
+	if (previousIndex < 0)
+		previousIndex += pointCount;
+	vec2 current = points[polygon[lowestYIndex]];
+	vec2 prev = points[polygon[previousIndex]];
+	vec2 next = points[polygon[nextIndex]];
+	vec2 axis1 = prev - next;
+	vec2 axis2 = mat3::rotation(3.14f / 2.0f) * axis1;
+	float multPrev = basisChange(prev - current, axis1, axis2).second;
+	float multNext = basisChange(next - current, axis1, axis2).second;
+	float lowestMult = multPrev < multNext ? multPrev : multNext;
+
+	int nextLowestVertexIndex = -1;
+
+	for (int i = 0; i < polygon.size(); i++){
+		if (i != lowestYIndex && i != nextIndex && i != previousIndex){
+			vec2 v = points[polygon[i]];
+			TriangleLocalization loc = findInTriangle(v, current, prev, next);
+			if (loc == INSIDE){
+				float mult = basisChange(v, axis1, axis2).second;
+				if (mult < lowestMult){
+					lowestMult = mult;
+					nextLowestVertexIndex = i;
+				}
+			}
+		}
+	}
+
+	if (nextLowestVertexIndex == -1){
+		resp.push_back(polygon[lowestYIndex]);
+		resp.push_back(polygon[nextIndex]);
+		resp.push_back(polygon[previousIndex]);
+		polygon.erase(polygon.begin() + lowestYIndex);
+		triangulate(resp, points, polygon, totalPointCount);
+	}
+	else {
+		vector<int> p1, p2;
+		p1.push_back(polygon[lowestYIndex]);
+		int index = (lowestYIndex + 1) % pointCount;
+		while (index != nextLowestVertexIndex){
+			p1.push_back(polygon[index]);
+			index = (index + 1) % pointCount;
+		}
+		p1.push_back(polygon[nextLowestVertexIndex]);
+
+		p2.push_back(polygon[lowestYIndex]);
+		index = lowestYIndex - 1;
+		if (index < 0)
+			index += pointCount;
+		while (index != nextLowestVertexIndex){
+			p2.push_back(polygon[index]);
+			index--;
+			if (index < 0)
+				index += pointCount;
+		}
+		p2.push_back(polygon[nextLowestVertexIndex]);
+		printf("Left: %d right: %d\n", p1.size(), p2.size());
+		triangulate(resp, points, p1, totalPointCount);
+		triangulate(resp, points, p2, totalPointCount);
+	}
 }
 
 /*
 Nota: vértices do polígono devem estar no sentido horário!
 */
-std::vector<int> incrementalTriangulate(vec2 *points, int count){
-	std::vector<int> resp;
+vector<int> incrementalTriangulate(vec2 *points, int count){
+	vec2 a(1, 0);
+	vec2 b(0, 1);
+	vec2 c(10, 14.1f);
+	pair<float, float> bases = basisChange(c, a, b);
+	printf("Base change: %f %f\n", bases.first, bases.second);
+	vector<int> resp;
 
-	//Cria uma cópia dos vértices, salvando os índices originais
-	vector<PointInfo> vertices;
+	vector<int> indices;
 	for (int i = 0; i < count; i++)
-		vertices.push_back(PointInfo(points + i, i));
+		indices.push_back(i);
 
-	for (int i = 0; i < vertices.size(); i++){
-		if (isCenterOfEar(vertices, i)){
-			//Sempre que um vértice, o anterior e o posterior formarem uma orelha, remover esse vértice do polígono.
-			int previous = i - 1;
-			if (previous < 0)
-				previous += vertices.size();
-			int next = (i + 1) % vertices.size();
-			resp.push_back(vertices[previous].index);
-			resp.push_back(vertices[i].index);
-			resp.push_back(vertices[next].index);
-			vertices.erase(vertices.begin() + i);
-			i--;
-		}
-	}
+	triangulate(resp, points, indices, count);
 
 	return resp;
 }
