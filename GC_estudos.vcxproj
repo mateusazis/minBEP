@@ -144,6 +144,8 @@
   <ItemGroup>
     <ClCompile Include="angel.cpp" />
     <ClCompile Include="ConvexHull.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="InteractiveScene.cpp" />
     <ClCompile Include="lista1.cpp" />
     <ClCompile Include="Localization.cpp" />
     <ClCompile Include="main.cpp" />
@@ -151,6 +153,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="angel.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="InteractiveScene.h" />
     <ClInclude Include="lista1.h" />
     <ClInclude Include="GeneralProblems.h" />
     <ClInclude Include="Scene.h" />

@@ -5,8 +5,9 @@
 #include "GeneralProblems.h"
 #include <GL/freeglut.h>
 #include <ctime>
-#include "Scene.h"
+#include "InteractiveScene.h"
 #include "lista1.h"
+#include "Input.h"
 
 using namespace std;
 Scene *s;
@@ -305,78 +306,53 @@ public:
 	pair<int, int> closetsPair;
 };
 
-class TriangulationScene : public Scene{
+class TriangulationScene : public InteractiveScene{
 public:
-	TriangulationScene(){
-		glMatrixMode(GL_PROJECTION);
-		glOrtho(0, 200, 0, 200, -1, 1);
-		//randomize();
-	}
+	TriangulationScene() : InteractiveScene(400){	}
 
 	void render(float delta){
-		glColor3f(1, 1, 1);
-		int pointCount = points.size();
-		GLenum mode = pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
+		InteractiveScene::render(delta);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glBegin(mode);
-		glColor3f(1, 1, 1);
-		for (int i = 0; i < pointCount; i++){
-			glVertex2fv(points[i].data());
-		}
-		glEnd();
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		glBegin(GL_TRIANGLES);
 		glColor3f(1, 0, 0);
-		for (int i = 0; i < triangles.size(); i++){
+		for (int i = 0; i < triangles.size(); i++)
 			glVertex2fv(points[triangles[i]].data());
-		}
 		glEnd();
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
-	void onMouseDown(){
-		points.push_back(vec2((mouseX), mouseY));
+	GLenum getDrawPrimitive(){
+		int pointCount = points.size();
+		return pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
+	}
+
+	void onPointAdded(){
 		triangles = incrementalTriangulate(points.data(), points.size());
 	}
 
-	vector<vec2> points;
 	vector<int> triangles;
 };
 
-class ConvexPolygonScene : public Scene{
+class ConvexPolygonScene : public InteractiveScene{
 public:
-	ConvexPolygonScene(){
-		glMatrixMode(GL_PROJECTION);
-		glOrtho(0, 200, 0, 200, -1, 1);
-		//randomize();
+	ConvexPolygonScene() : InteractiveScene(400), isConvex(true){	}
+
+	const GLfloat* getDrawColor(){
+		return successColors[isConvex];
 	}
 
-	void render(float delta){
-		glColor3f(1, 1, 1);
+	GLenum getDrawPrimitive(){
 		int pointCount = points.size();
-		GLenum mode = pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glBegin(mode);
-
-		if (mode == GL_POLYGON)
-			glColor3fv(successColors[isConvex]);
-		else
-			glColor3f(1, 1, 1);
-		for (int i = 0; i < pointCount; i++){
-			glVertex2fv(points[i].data());
-		}
-		glEnd();
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		return pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
 	}
 
-	void onMouseDown(){
-		points.push_back(vec2((mouseX), mouseY));
+	void onPointAdded(){
 		isConvex = convex(points.data(), points.size());
 	}
 
-	vector<vec2> points;
 	bool isConvex;
 };
 
@@ -421,6 +397,7 @@ void onMouse(int button, int pressed, int x, int y){
 void onMouse2(int x, int y){
 	mouseX = x;
 	mouseY = 400-y;
+	Input::updateMouse(mouseX, mouseY);
 }
 
 void triangleLocationTest(){
@@ -445,8 +422,8 @@ void triangleLocationTest(){
 	//s = new ConvexityScene();
 	//s = new DisjointsTriangles();
 	//s = new ClosestPairScene();
-	/*s = new TriangulationScene();*/
-	s = new ConvexPolygonScene();
+	s = new TriangulationScene();
+	//s = new ConvexPolygonScene();
 	
 	glutMainLoop();
 }
