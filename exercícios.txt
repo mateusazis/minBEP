@@ -1,7 +1,7 @@
 Primitivas geométricas
 4 OK
 Polígonos
-1
+1 OK
 2 OK, usar a triangulação velha
 4 OK, mesmo do anterior
 Complexidade

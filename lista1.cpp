@@ -282,8 +282,26 @@ vector<int> incrementalTriangulate(vec2 *points, int count){
 	return resp;
 }
 
+//Lista 1 - Exercícios sobre Polígonos - Questão 1
+//Nota: Pontos devem ser dados no sentido horário
+bool convex(vec2* polygon, int pointCount){
+	if (pointCount <= 3)
+		return true;
+	
+	vec2 diff1 = polygon[1] - polygon[0];
+	vec2 diff2 = polygon[2] - polygon[0];
+	int firstSign = diff1.crossSign(diff2);
 
-
+	for (int i = 0; i < pointCount; i++){
+		int current = (i + 1) % pointCount;
+		int next = (i + 2) % pointCount;
+		diff1 = polygon[current] - polygon[i];
+		diff2 = polygon[next] - polygon[i];
+		if (diff1.crossSign(diff2) != firstSign)
+			return false;
+	}
+	return true;
+}
 
 //Lista 1 - Exercícios sobre Polígonos - Questões 2 e 4
 static bool isCenterOfEar(vector<PointInfo> v, int i){

@@ -11,6 +11,10 @@
 using namespace std;
 Scene *s;
 int mouseX, mouseY;
+const GLfloat successColors[2][3] = {
+	1,0,0,
+	0,1,0
+};
 
 void hullTest(){
 	vec2 p[] = {
@@ -101,7 +105,8 @@ public:
 		glVertex2fv(triA[1].data());
 		glVertex2fv(triA[2].data());
 		bool disjoints = disjointsTriangles(triA, triB);
-		glColor3f(!disjoints, disjoints, 0);
+		/*glColor3f(!disjoints, disjoints, 0);*/
+		glColor3fv(successColors[disjoints]);
 		glVertex2fv(triB[0].data());
 		glVertex2fv(triB[1].data());
 		glVertex2fv(triB[2].data());
@@ -302,7 +307,7 @@ public:
 
 class TriangulationScene : public Scene{
 public:
-	TriangulationScene() : points(NULL), pointCount(0){
+	TriangulationScene(){
 		glMatrixMode(GL_PROJECTION);
 		glOrtho(0, 200, 0, 200, -1, 1);
 		//randomize();
@@ -310,6 +315,7 @@ public:
 
 	void render(float delta){
 		glColor3f(1, 1, 1);
+		int pointCount = points.size();
 		GLenum mode = pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -320,8 +326,6 @@ public:
 		}
 		glEnd();
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		
-
 
 		glBegin(GL_TRIANGLES);
 		glColor3f(1, 0, 0);
@@ -332,15 +336,48 @@ public:
 	}
 
 	void onMouseDown(){
-		points = (vec2*)realloc(points, sizeof(vec2) * (pointCount + 1));
-		points[pointCount] = vec2((mouseX), mouseY);
-		pointCount++;
-		triangles = incrementalTriangulate(points, pointCount);
+		points.push_back(vec2((mouseX), mouseY));
+		triangles = incrementalTriangulate(points.data(), points.size());
 	}
 
-	vec2 *points;
-	int pointCount;
+	vector<vec2> points;
 	vector<int> triangles;
+};
+
+class ConvexPolygonScene : public Scene{
+public:
+	ConvexPolygonScene(){
+		glMatrixMode(GL_PROJECTION);
+		glOrtho(0, 200, 0, 200, -1, 1);
+		//randomize();
+	}
+
+	void render(float delta){
+		glColor3f(1, 1, 1);
+		int pointCount = points.size();
+		GLenum mode = pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glBegin(mode);
+
+		if (mode == GL_POLYGON)
+			glColor3fv(successColors[isConvex]);
+		else
+			glColor3f(1, 1, 1);
+		for (int i = 0; i < pointCount; i++){
+			glVertex2fv(points[i].data());
+		}
+		glEnd();
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+
+	void onMouseDown(){
+		points.push_back(vec2((mouseX), mouseY));
+		isConvex = convex(points.data(), points.size());
+	}
+
+	vector<vec2> points;
+	bool isConvex;
 };
 
 
@@ -408,7 +445,8 @@ void triangleLocationTest(){
 	//s = new ConvexityScene();
 	//s = new DisjointsTriangles();
 	//s = new ClosestPairScene();
-	s = new TriangulationScene();
+	/*s = new TriangulationScene();*/
+	s = new ConvexPolygonScene();
 	
 	glutMainLoop();
 }
