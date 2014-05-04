@@ -8,6 +8,7 @@
 #include "InteractiveScene.h"
 #include "lista1.h"
 #include "Input.h"
+#include <clocale>
 
 using namespace std;
 Scene *s;
@@ -171,30 +172,18 @@ public:
 			1, 0, 0,
 			0, 1, 0
 		};
-
-		const float PI = 3.14f;
-		//angle += 0.0000001f;
-		const float SPEED = PI;
-		angle += delta * PI;
-		if (angle >= PI * 2)
-			angle -= PI * 2;
-		rot = mat3::rotation(angle);
-		vec2 triAT = rot * triA;
-		vec2 triBT = rot * triB;
-		vec2 triCT = rot * triC;
-
-		
+	
 
 		glBegin(GL_TRIANGLES);
 		glColor3f(0.5f, 0.5f, 0.5f);
-		glVertex2fv(triAT.data());
-		glVertex2fv(triBT.data());
-		glVertex2fv(triCT.data());
+		glVertex2fv(triA.data());
+		glVertex2fv(triB.data());
+		glVertex2fv(triC.data());
 		glEnd();
 
 		glBegin(GL_POINTS);
 		for (int i = 0; i < sizeof(points) / sizeof(points[0]); i++){
-			TriangleLocalization l = findInTriangle(points[i], triAT, triBT, triCT);
+			TriangleLocalization l = findInTriangle(points[i], triA, triB, triC);
 			glColor3f(l & 4, l & 2, l & 1);
 			glVertex2fv(points[i].data());
 		}
@@ -205,64 +194,6 @@ public:
 	vec2 points[1000];
 	float angle = 0;
 	mat3 rot;
-};
-
-class PolygonScene : public Scene{
-public:
-	PolygonScene(){
-		glMatrixMode(GL_PROJECTION);
-		glOrtho(0, 200, 0, 200, -1, 1);
-		vec2 p[] = {
-			vec2(10,10),
-			vec2(20, 300),
-			//vec2(200, 350),
-			vec2(100, 350),
-			vec2(200, 100),
-			vec2(300, 350),
-			vec2(380, 300),
-			vec2(380, 20),
-		};
-		pointCount = sizeof(p) / sizeof(vec2);
-		points = new vec2[pointCount];
-		memcpy(points, p, sizeof(p));
-		glPointSize(20);
-
-		b = new unsigned char[400 * 400 * 3];
-		
-	}
-
-	void render(float delta){
-		glColor3f(1, 1, 1);
-
-		glBegin(GL_LINE_LOOP);
-		for (int i = 0; i < pointCount; i++){
-			glVertex2fv(points[i].data());
-		}
-		glEnd();
-
-		glBegin(GL_POINTS);
-		bool inside = findInPolygon(vec2(mouseX, mouseY), points, pointCount);
-		glColor3f(!inside, inside, 0);
-		glVertex2f(mouseX, mouseY);
-		glEnd();
-
-		glReadPixels(0, 0, 400, 400, GL_RGB, GL_UNSIGNED_BYTE, b);
-		for (int i = 0; i < 400; i++)
-		for (int j = 0; j < 400; j++){
-			int base = (i * 400 + j) * 3;
-			if (b[base] == 0 && b[base + 1] == 0 && b[base + 2] == 0){
-				bool found = findInPolygon(vec2(j, i), points, pointCount);
-				b[base] = !found * 255;
-				b[base + 1] = found * 255;
-			}
-		}
-		glRasterPos2f(0, 0);
-		glDrawPixels(400, 400, GL_RGB, GL_UNSIGNED_BYTE, b);
-	}
-
-	vec2 *points;
-	int pointCount;
-	unsigned char *b;
 };
 
 class ClosestPairScene : public Scene{
@@ -336,6 +267,15 @@ public:
 	vector<int> triangles;
 };
 
+class EarClippingTriangulationScene : public TriangulationScene{
+public:
+	EarClippingTriangulationScene() : TriangulationScene(){	}
+
+	void onPointAdded(){
+		triangles = earClippingTriangulate(points.data(), points.size());
+	}
+};
+
 class ConvexPolygonScene : public InteractiveScene{
 public:
 	ConvexPolygonScene() : InteractiveScene(400), isConvex(true){	}
@@ -400,41 +340,70 @@ void onMouse2(int x, int y){
 	Input::updateMouse(mouseX, mouseY);
 }
 
-void triangleLocationTest(){
+int getQuestionNumber(){
+	printf("Escolha um exercício a executar:\n");
+	printf("1) Primitivas Geométricas - Questão 4 (ângulo convexo)\n");
+	printf("2) Polígonos - Questão 1 (polígono convexo)\n");
+	printf("3) Polígonos - Questão 2 e 4 (triangulação)\n");
+	printf("4) Problemas fundamentais - Questão 1 (localização em triângulo)\n");
+	printf("5) Problemas fundamentais - Questão 2 (triângulos disjuntos)\n");
+	printf("6) Problemas fundamentais - Questão 3 (par mais próximo)\n");
+	printf("7) Problemas fundamentais - Questão 4 (triangulação incremental)\n");
+	int resp;
+	scanf("%d", &resp);
+	return resp;
+}
+
+void setupExercises(){
+	int question = getQuestionNumber();
+	switch (question){
+	case 1:
+		s = new ConvexityScene();
+		break;
+	case 2:
+		s = new ConvexPolygonScene();
+		break;
+	case 3:
+		s = new EarClippingTriangulationScene(); //trocar para ear cutting
+		break;
+	case 4:
+		s = new TriangleScene();
+		break;
+	case 5:
+		s = new DisjointsTriangles();
+		break;
+	case 6:
+		s = new ClosestPairScene();
+		break;
+	case 7:
+		s = new TriangulationScene();
+		break;
+	}
+}
+
+int main(int argc, char **argv){
+	setlocale(LC_ALL, "Portuguese");
+	startT = endT = clock();
+	srand(time(NULL));
+
+	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(400, 400);
-	glutCreateWindow("Triangle Localization");
 	
-
-
+	glutCreateWindow("Lista 1 - Computação Gemérica");
+	glutHideWindow();
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
 	glutKeyboardFunc(onKeyboard);
 	glutPassiveMotionFunc(onMouse2);
 	glutMouseFunc(onMouse);
 	
+	setupExercises();
+
+	glutShowWindow();
 
 	glClearColor(0, 0, 0, 1);
 	glOrtho(-2, 2, -2, 2, -2, 2);
-	
-	//s = new TriangleScene();
-	//s = new PolygonScene();
-	//s = new ConvexityScene();
-	//s = new DisjointsTriangles();
-	//s = new ClosestPairScene();
-	s = new TriangulationScene();
-	//s = new ConvexPolygonScene();
-	
 	glutMainLoop();
-}
-
-int main(int argc, char **argv){
-	startT = endT = clock();
-
-	glutInit(&argc, argv);
-	srand(time(NULL));
-	//hullTest();
-	//pointLocationTest();
-	triangleLocationTest();
 	return 0;
 }

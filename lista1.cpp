@@ -329,7 +329,7 @@ static bool isCenterOfEar(vector<PointInfo> v, int i){
 /*
 Nota: vértices do polígono devem estar no sentido horário!
 */
-vector<int> earCuttingTriangulate(vec2 *points, int count){
+vector<int> earClippingTriangulate(vec2 *points, int count){
 	vector<int> resp;
 
 	//Cria uma cópia dos vértices, salvando os índices originais

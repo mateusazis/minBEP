@@ -23,6 +23,6 @@ std::vector<int> incrementalTriangulate(vec2 *points, int count);
 bool convex(vec2* polygon, int pointCount);
 
 //Lista 1 - Exercícios sobre Polígonos - Questões 2 e 4
-std::vector<int> earCuttingTriangulate(vec2 *points, int count);
+std::vector<int> earClippingTriangulate(vec2 *points, int count);
 
 #endif
