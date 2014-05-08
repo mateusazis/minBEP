@@ -97,6 +97,11 @@ public:
 		triA[0] = triB[0] = vec2(0, 1);
 		triA[1] = triB[1] = mat3::rotation(DEGREES_120) * triA[0];
 		triA[2] = triB[2] = mat3::rotation(2 * DEGREES_120) * triA[0];
+
+		mat3 bTranslation = mat3::translation(0.5f, 0.5f);
+		triB[0] = bTranslation * triB[0];
+		triB[1] = bTranslation * triB[1];
+		triB[2] = bTranslation * triB[2];
 		glEnable(GL_VERTEX_ARRAY);
 	}
 
@@ -200,7 +205,7 @@ class ClosestPairScene : public Scene{
 public:
 	ClosestPairScene(){
 		glMatrixMode(GL_PROJECTION);
-		glOrtho(0, 200, 0, 200, -1, 1);
+		//glOrtho(0, 200, 0, 200, -1, 1);
 		
 		randomize();
 		glPointSize(5);
@@ -222,24 +227,23 @@ public:
 	void randomize(){
 		const int pointCount = sizeof(points) / sizeof(vec2);
 		for (int i = 0; i < pointCount; i++){
-			points[i] = vec2(random() * 200, random() * 200);
+			points[i] = vec2(random() * 3.8f - 2, random() * 3.8f - 2);
 		}
 		closetsPair = findClosestPair(points, pointCount);
 	}
 
 	void onKey(char c){
-		if (c == 'a'){
+		if (c == 'r')
 			randomize();
-		}
 	}
 
 	vec2 points[11];
 	pair<int, int> closetsPair;
 };
 
-class TriangulationScene : public InteractiveScene{
+class DivideAndConquerTriangulationScene : public InteractiveScene{
 public:
-	TriangulationScene() : InteractiveScene(400){	}
+	DivideAndConquerTriangulationScene() : InteractiveScene(400){	}
 
 	void render(float delta){
 		InteractiveScene::render(delta);
@@ -261,15 +265,15 @@ public:
 	}
 
 	void onPointAdded(){
-		triangles = incrementalTriangulate(points.data(), points.size());
+		triangles = divideAndConquerTriangulate(points.data(), points.size());
 	}
 
 	vector<int> triangles;
 };
 
-class EarClippingTriangulationScene : public TriangulationScene{
+class EarClippingTriangulationScene : public DivideAndConquerTriangulationScene{
 public:
-	EarClippingTriangulationScene() : TriangulationScene(){	}
+	EarClippingTriangulationScene() : DivideAndConquerTriangulationScene(){	}
 
 	void onPointAdded(){
 		triangles = earClippingTriangulate(points.data(), points.size());
@@ -344,11 +348,12 @@ int getQuestionNumber(){
 	printf("Escolha um exercício a executar:\n");
 	printf("1) Primitivas Geométricas - Questão 4 (ângulo convexo)\n");
 	printf("2) Polígonos - Questão 1 (polígono convexo)\n");
-	printf("3) Polígonos - Questão 2 e 4 (triangulação)\n");
-	printf("4) Problemas fundamentais - Questão 1 (localização em triângulo)\n");
-	printf("5) Problemas fundamentais - Questão 2 (triângulos disjuntos)\n");
-	printf("6) Problemas fundamentais - Questão 3 (par mais próximo)\n");
-	printf("7) Problemas fundamentais - Questão 4 (triangulação incremental)\n");
+	printf("3) Polígonos - Questão 2 (triangulação por divisão e conquista)\n");
+	printf("4) Polígonos - Questão 4 (triangulação por corte de orelhas)\n");
+	printf("5) Problemas fundamentais - Questão 1 (localização em triângulo)\n");
+	printf("6) Problemas fundamentais - Questão 2 (triângulos disjuntos)\n");
+	printf("7) Problemas fundamentais - Questão 3 (par mais próximo)\n");
+	printf("8) Problemas fundamentais - Questão 4 (triangulação incremental)\n");
 	int resp;
 	scanf("%d", &resp);
 	return resp;
@@ -364,20 +369,21 @@ void setupExercises(){
 		s = new ConvexPolygonScene();
 		break;
 	case 3:
-		s = new EarClippingTriangulationScene(); //trocar para ear cutting
+		s = new DivideAndConquerTriangulationScene();
 		break;
 	case 4:
-		s = new TriangleScene();
+		s = new EarClippingTriangulationScene(); //trocar para ear cutting
 		break;
 	case 5:
-		s = new DisjointsTriangles();
+		s = new TriangleScene();
 		break;
 	case 6:
-		s = new ClosestPairScene();
+		s = new DisjointsTriangles();
 		break;
 	case 7:
-		s = new TriangulationScene();
+		s = new ClosestPairScene();
 		break;
+	
 	}
 }
 

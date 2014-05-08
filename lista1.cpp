@@ -142,7 +142,7 @@ static float _findClosestPair(PointInfo *points, int start, int end, int *index1
 	return points[*index1].sqrDistance(points[*index2]);
 }
 
-std::pair<int, int> findClosestPair(vec2 *points, int count){
+pair<int, int> findClosestPair(vec2 *points, int count){
 	//Vetores auxiliares, para guardar os índices dos pontos nos subgrupos.
 	int *aux1 = new int[count],
 		*aux2 = new int[count];
@@ -164,7 +164,7 @@ std::pair<int, int> findClosestPair(vec2 *points, int count){
 	return resp;	
 }
 
-
+//Lista 1 - Exercícios sobre Polígonos - Questão 2
 int findLowestY(vec2* points, vector<int> & polygon){
 	int resp = 0;
 	float minY = points[polygon[0]].y();
@@ -270,7 +270,7 @@ void triangulate(vector<int> & resp, vec2* points, vector<int> polygon, int tota
 	}
 }
 
-vector<int> incrementalTriangulate(vec2 *points, int count){
+vector<int> divideAndConquerTriangulate(vec2 *points, int count){
 	vector<int> resp;
 
 	vector<int> indices;
@@ -303,7 +303,7 @@ bool convex(vec2* polygon, int pointCount){
 	return true;
 }
 
-//Lista 1 - Exercícios sobre Polígonos - Questões 2 e 4
+//Lista 1 - Exercícios sobre Polígonos - Questão 4
 static bool isCenterOfEar(vector<PointInfo> v, int i){
 	int size = v.size();
 	int previous = i - 1;

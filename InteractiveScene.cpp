@@ -18,8 +18,18 @@ void InteractiveScene::render(float delta){
 	}
 
 void InteractiveScene::onMouseDown(){
-	points.push_back(Input::mousePosition());
+	//if (points.size() < 3)
+		points.push_back(Input::mousePosition());
+	/*else
+		points.insert(points.end() - 2, Input::mousePosition());*/
+	
 	onPointAdded();
+}
+
+void InteractiveScene::onKey(char c){
+	if (c == 'r'){
+		points.clear();
+	}
 }
 
 static const GLfloat white[3] = { 1, 1, 1 };
