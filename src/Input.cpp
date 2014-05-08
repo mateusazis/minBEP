@@ -1,4 +1,4 @@
-#include "Input.h"
+#include "../include/Input.h"
 
 vec2 Input::mousePos(0,0);
 

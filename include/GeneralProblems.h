@@ -2,7 +2,7 @@
 #define GC_PROBLEMS_H
 
 #include <vector>
-#include "angel.h"
+#include "../include/angel.h"
 
 std::vector<vec2>* getHull(vec2 * points, int count);
 

@@ -142,22 +142,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="angel.cpp" />
-    <ClCompile Include="ConvexHull.cpp" />
-    <ClCompile Include="Input.cpp" />
-    <ClCompile Include="InteractiveScene.cpp" />
-    <ClCompile Include="lista1.cpp" />
-    <ClCompile Include="Localization.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="src/angel.cpp" />
+    <ClCompile Include="src/ConvexHull.cpp" />
+    <ClCompile Include="src/Input.cpp" />
+    <ClCompile Include="src/InteractiveScene.cpp" />
+    <ClCompile Include="src/lista1.cpp" />
+    <ClCompile Include="src/Localization.cpp" />
+    <ClCompile Include="src/main.cpp" />
+    <ClCompile Include="src/Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="angel.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="InteractiveScene.h" />
-    <ClInclude Include="lista1.h" />
-    <ClInclude Include="GeneralProblems.h" />
-    <ClInclude Include="Scene.h" />
+    <ClInclude Include="include/angel.h" />
+    <ClInclude Include="include/Input.h" />
+    <ClInclude Include="include/InteractiveScene.h" />
+    <ClInclude Include="include/lista1.h" />
+    <ClInclude Include="include/GeneralProblems.h" />
+    <ClInclude Include="include/Scene.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="exercícios.txt" />

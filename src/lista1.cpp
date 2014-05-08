@@ -1,5 +1,5 @@
-#include "lista1.h"
-#include "GeneralProblems.h"
+#include "../include/lista1.h"
+#include "../include/GeneralProblems.h"
 #include <cmath>
 #include <cstdio>
 #include <cstring>

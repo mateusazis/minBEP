@@ -2,12 +2,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <vector>
-#include "GeneralProblems.h"
+#include "../include/GeneralProblems.h"
 #include <GL/freeglut.h>
 #include <ctime>
-#include "InteractiveScene.h"
-#include "lista1.h"
-#include "Input.h"
+#include "../include/InteractiveScene.h"
+#include "../include/lista1.h"
+#include "../include/Input.h"
 #include <clocale>
 
 using namespace std;

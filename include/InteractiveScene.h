@@ -1,6 +1,6 @@
 #pragma once
-#include "Scene.h"
-#include "angel.h"
+#include "../include/Scene.h"
+#include "../include/angel.h"
 #include <GL/freeglut.h>
 #include <vector>
 

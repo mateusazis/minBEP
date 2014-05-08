@@ -1,5 +1,5 @@
-#include "InteractiveScene.h"
-#include "Input.h"
+#include "../include/InteractiveScene.h"
+#include "../include/Input.h"
 
 InteractiveScene::InteractiveScene(int windowSize){
 	glMatrixMode(GL_PROJECTION);
