@@ -76,6 +76,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\UFF\Mestrado\GC\code\GC_estudos\dependencies\freeglut-2.8.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\UFF\Mestrado\GC\code\GC_estudos\dependencies\freeglut-2.8.1\lib\x86;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
