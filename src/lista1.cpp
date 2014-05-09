@@ -354,3 +354,121 @@ vector<int> earClippingTriangulate(vec2 *points, int count){
 
 	return resp;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class PointTuple2 {
+public:
+	PointTuple2(){}
+	PointTuple2(const PointTuple2 & other){
+		this->polarAngle = other.polarAngle;
+		this->v = other.v;
+		this->index = other.index;
+	}
+
+	PointTuple2(vec2 v, vec2 center, int index) : index(index){
+		this->v = v;
+
+		vec2 diff = v - center;
+		float mag = diff.magnitude();
+		polarAngle = acos(diff.x() / mag);
+		if (diff.y() < 0)
+			polarAngle = -polarAngle;
+	}
+	float polarAngle;
+	vec2 v;
+	int index;
+};
+
+static int comparePointTuple2(const void *v1, const void *v2){
+	PointTuple2 *p1 = (PointTuple2*)v1,
+		*p2 = (PointTuple2*)v2;
+
+	if (p1->polarAngle < p2->polarAngle)
+		return -1;
+	if (p1->polarAngle == p2->polarAngle)
+		return 0;
+	return 1;
+}
+
+static float _getPointDistance(vec2 v1, vec2 v2){
+	return sqrt((v1 - v2).magnitude());
+}
+vec2 getCenter(vec2 * points, int count);
+static int getCenterMostVertex(vec2 * points, int count){
+	vec2 center = getCenter(points, count);
+	int resp = 0;
+	float dist = _getPointDistance(points[0], center);
+	for (int i = 1; i < count; i++){
+		float newDist = _getPointDistance(points[i], center);
+		if (newDist < dist)
+		{
+			resp = i;
+			dist = newDist;
+		}
+	}
+	return resp;
+}
+
+vector<int> incrementalTriangulate(vec2 *points, int count){
+	vector<int> resp;
+
+	if (count == 3){
+		resp.push_back(0);
+		resp.push_back(1);
+		resp.push_back(2);
+	}
+	else if (count > 3){
+		int centerMost = getCenterMostVertex(points, count);
+		PointTuple2 *tps = new PointTuple2[count - 1];
+
+		int n = 0;
+		for (int i = 0; i < count; i++){
+			if (i != centerMost)
+				tps[n++] = PointTuple2(points[i], points[centerMost], i);
+		}
+
+		qsort(tps, count - 1, sizeof(PointTuple2), comparePointTuple2);
+		
+		for (int i = 0; i < count - 1; i++){
+			int j = (i + 1) % (count - 1);
+			resp.push_back(tps[i].index);
+			resp.push_back(centerMost);
+			resp.push_back(tps[j].index);
+		}
+
+		for (int i = 0; i < count - 1; i++){
+			int j = (i + 1) % (count - 1);
+			int k = (i + 2) % (count - 1);
+
+			vec2 prev = tps[i].v;
+			vec2 curr = tps[j].v;
+			vec2 next = tps[k].v;
+			if ((prev - curr).crossSign(next - curr) > 0){
+				resp.push_back(tps[i].index);
+				resp.push_back(tps[j].index);
+				resp.push_back(tps[k].index);
+			}
+		}
+
+		delete[] tps;
+	}
+
+	return resp;
+}

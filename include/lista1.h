@@ -26,4 +26,6 @@ std::vector<int> divideAndConquerTriangulate(vec2 *points, int count);
 //Lista 1 - Exercícios sobre Polígonos - Questão 4
 std::vector<int> earClippingTriangulate(vec2 *points, int count);
 
+std::vector<int> incrementalTriangulate(vec2 *points, int count);
+
 #endif

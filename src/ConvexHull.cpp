@@ -23,7 +23,7 @@ public:
 	vec2 v;
 };
 
-static vec2 getCenter(vec2 * points, int count){
+vec2 getCenter(vec2 * points, int count){
 	float sumX = 0, sumY = 0;
 	for (int i = 0; i < count; i++){
 		sumX += points[i].x();
@@ -68,8 +68,8 @@ static int oneLess(int n, int count){
 }
 
 
-vector<vec2>* getHull(vec2 * points, int count){
-	vector<vec2>* resp = new vector<vec2>();
+vector<vec2> getHull(vec2 * points, int count){
+	vector<vec2> resp;
 
 	vec2 center = getCenter(points, count);
 	PointTuple *tuples = new PointTuple[count];
@@ -83,7 +83,7 @@ vector<vec2>* getHull(vec2 * points, int count){
 
 	int last = oneLess(leftMost, count);
 	int next = oneLess(last, count);
-	resp->push_back(tuples[leftMost].v);
+	resp.push_back(tuples[leftMost].v);
 
 
 	while (next != last){
@@ -91,7 +91,7 @@ vector<vec2>* getHull(vec2 * points, int count){
 		vec2 middleV = tuples[next].v;
 		vec2 centerV = tuples[middle].v;
 		if (smallAngle(prev, middleV, centerV)){
-			resp->push_back(tuples[middle].v);
+			resp.push_back(tuples[middle].v);
 			prev = tuples[middle].v;
 
 		}

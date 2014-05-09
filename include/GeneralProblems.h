@@ -4,7 +4,7 @@
 #include <vector>
 #include "../include/angel.h"
 
-std::vector<vec2>* getHull(vec2 * points, int count);
+std::vector<vec2> getHull(vec2 * points, int count);
 
 enum SegmentLocalization { RIGHT, LEFT, BEFORE_A, ON_A, BETWEEN_A_B, ON_B, AFTER_B };
 SegmentLocalization findInSegment(vec2 point, vec2 a, vec2 b);

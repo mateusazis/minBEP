@@ -29,12 +29,11 @@ void hullTest(){
 		vec2(1, -1),
 		vec2(0.3f, 0.7f),
 	};
-	vector<vec2>* hull = getHull(p, sizeof(p) / sizeof(p[0]));
-	for (int i = 0; i < hull->size(); i++){
-		vec2 v = hull->operator[](i);
+	vector<vec2> hull = getHull(p, sizeof(p) / sizeof(p[0]));
+	for (int i = 0; i < hull.size(); i++){
+		vec2 v = hull[i];
 		printf("%.1f %.1f\n", v.x(), v.y());
 	}
-	delete hull;
 }
 
 void pointLocationTest(){
@@ -280,6 +279,51 @@ public:
 	}
 };
 
+class IncrementalTriangulationScene : public DivideAndConquerTriangulationScene{
+public:
+	IncrementalTriangulationScene() : DivideAndConquerTriangulationScene(){	
+		glPointSize(5);
+	}
+
+	void render(float delta){
+
+
+		glBegin(getDrawPrimitive());
+		glBegin(GL_TRIANGLES);
+		glColor3fv(getDrawColor());
+		for (int i = 0; i < triangles.size(); i++)
+			glVertex2fv(points[triangles[i]].data());
+		glEnd();
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		glBegin(GL_TRIANGLES);
+		glColor3f(1, 0, 0);
+		for (int i = 0; i < triangles.size(); i++)
+			glVertex2fv(points[triangles[i]].data());
+		glEnd();
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		glColor3f(0, 1, 0);
+		glBegin(GL_POINTS);
+		for (int i = 0; i < points.size(); i++){
+			vec2 v = points[i];
+			glVertex2fv(v.data());
+		}
+		glEnd();
+	}
+
+	GLenum getDrawPrimitive(){
+		int pointCount = points.size();
+		return pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
+	}
+
+	void onPointAdded(){
+		triangles = incrementalTriangulate(points.data(), points.size());
+	}
+};
+
 class ConvexPolygonScene : public InteractiveScene{
 public:
 	ConvexPolygonScene() : InteractiveScene(400), isConvex(true){	}
@@ -383,7 +427,9 @@ void setupExercises(){
 	case 7:
 		s = new ClosestPairScene();
 		break;
-	
+	case 8:
+		s = new IncrementalTriangulationScene();
+		break;
 	}
 }
 
