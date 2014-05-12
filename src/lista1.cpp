@@ -457,6 +457,10 @@ vector<int> incrementalTriangulate(vec2 *points, int count){
 		resp.push_back(indices[2]);
 
 		deque<int> hull; //guardará, em sentido anti-horário, os índices dos vértices do fecho convexo
+		/* Nota: usei deque pois há muitas remoções, o que,
+		   segundo http://www.cplusplus.com/reference/vector/vector/erase/ ,
+		   é ineficiente em vectors. O uso de listas também é inadequado por não serem facilmente indexáveis.*/
+
 		hull.push_back(indices[0]);
 		if (points[indices[1]].y() > points[indices[2]].y()){ //caso de 3 vértices: a ordem depende do Y
 			hull.push_back(indices[1]);
