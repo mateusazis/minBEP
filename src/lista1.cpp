@@ -1,5 +1,6 @@
 #include "../include/lista1.h"
 #include "../include/GeneralProblems.h"
+#include "../include/Utils.h"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -94,7 +95,7 @@ static int findClosePoints(PointInfo* allPoints, vec2 reference, int start, int 
 
 /*Retorna a menor distância entre 2 pontos de um subgrupo.
 Coloca no índice de saída os índices desses pontos.*/
-static float _findClosestPair(PointInfo *points, int start, int end, int *index1, int *index2, int *aux1, int *aux2){
+static float _findClosestPair(vector<int> &points, int start, int end, int *index1, int *index2, int *aux1, int *aux2, vec2* p){
 	int len = end - start + 1;
 	if (len == 1){ 
 		/*No caso de um elemento, retorna distância infinita em vez de 0, 
@@ -107,8 +108,8 @@ static float _findClosestPair(PointInfo *points, int start, int end, int *index1
 		int resp1i, resp1j, resp2i, resp2j;
 
 		//Recursivamente, descobre os pares mais próximos nos grupos à esquerda e à direita
-		float best1 = _findClosestPair(points, start, middle, &resp1i, &resp1j, aux1, aux2);
-		float best2 = _findClosestPair(points, middle + 1, end, &resp2i, &resp2j, aux1, aux2);
+		float best1 = _findClosestPair(points, start, middle, &resp1i, &resp1j, aux1, aux2, p);
+		float best2 = _findClosestPair(points, middle + 1, end, &resp2i, &resp2j, aux1, aux2, p);
 
 		int respi, respj;
 		float best;
@@ -120,13 +121,13 @@ static float _findClosestPair(PointInfo *points, int start, int end, int *index1
 		}
 
 		//encontra os pontos à esquerda e à direita que são candidatos a estarem mais próximos
-		vec2 reference = *(points[middle].v);
+		vec2 reference = p[points[middle]];
 		int sizeLeft =  findClosePoints(points, reference,      start, middle, aux1, best, true);
 		int sizeRight = findClosePoints(points, reference, middle + 1,    end, aux2, best, false);
 
 		//verifica se algum deles está mais próximo
 		for (int i = 0; i < sizeLeft; i++){
-			PointInfo & pi = points[aux1[i]];
+			PointInfo & pi = p[points[aux1[i]];
 			for (int j = 0; j < sizeRight; j++){
 				PointInfo & pj = points[aux2[j]];
 				float newDist = pi.sqrDistance(pj);
@@ -148,18 +149,15 @@ pair<int, int> findClosestPair(vec2 *points, int count){
 		*aux2 = new int[count];
 
 	//Cria e ordena uma cópia dos pontos, preservando os índices iniciais
-	PointInfo* copy = new PointInfo[count];
-	for (int i = 0; i < count; i++)
-		copy[i] = PointInfo(points+i, i);
-	qsort(copy, count, sizeof(PointInfo), PointInfo::compareX);
+	vector<int> sortedPoints = PointSorter::byX(points, count);
 	
 	int a, b; //índices no array ordenado
-	_findClosestPair(copy, 0, count - 1, &a, &b, aux1, aux2);
+	_findClosestPair(sortedPoints, 0, count - 1, &a, &b, aux1, aux2);
 	
 	//Recupera os índices no array de entrada
-	pair<int, int> resp(copy[a].index, copy[b].index);
+	pair<int, int> resp(sortedPoints[a], sortedPoints[b]);
 
-	delete[] copy, aux1, aux2;
+	delete[] aux1, aux2;
 
 	return resp;	
 }

@@ -57,6 +57,10 @@ float vec2::sqrDistance(vec2 other){
 	return diffX * diffX + diffY * diffY;
 }
 
+bool operator ==(vec2 v, vec2 other){
+	return v.x() == other.x() && v.y() == other.y();
+}
+
 vec2 operator +(vec2 v, vec2 other){
 	return vec2(v.x() + other.x(), v.y() + other.y());
 }
@@ -131,4 +135,8 @@ float random(){
 	const int MAX = 1000;
 	int newR = rand() % MAX;
 	return newR / (MAX - 1.0f);
+}
+
+float random(float min, float max){
+	return min + (max - min) * random();
 }
