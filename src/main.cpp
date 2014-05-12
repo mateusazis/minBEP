@@ -18,39 +18,38 @@ const GLfloat successColors[2][3] = {
 	0,1,0
 };
 
-void hullTest(){
-	vec2 p[] = {
-		vec2(1, 1),
-		vec2(-1, 1),
-		vec2(-0.3f, 0.7f),
-		vec2(-0.3f, -0.7f),
-		vec2(-1, -1),
-		vec2(0.3f, -0.7f),
-		vec2(1, -1),
-		vec2(0.3f, 0.7f),
-	};
-	vector<vec2> hull = getHull(p, sizeof(p) / sizeof(p[0]));
-	for (int i = 0; i < hull.size(); i++){
-		vec2 v = hull[i];
-		printf("%.1f %.1f\n", v.x(), v.y());
-	}
-}
+class ConvexHullScene : public Scene{
+public:
+	ConvexHullScene(){
+		pointCount = 40;
+		points = new vec2[pointCount];
+		for (int i = 0; i < pointCount; i++)
+			points[i] = vec2(random(0, 1), random(0, 1));
 
-void pointLocationTest(){
-	vec2 a = vec2(1, 1);
-	vec2 b = vec2(7, 7);
-	vec2 testPoints[] = {
-		vec2(10, 1),
-		vec2(0, 1),
-		vec2(0, 0),
-		vec2(1, 1),
-		vec2(2, 2),
-		vec2(7, 7),
-		vec2(8, 8),
-	};
-	for (int i = 0; i < 7; i++)
-		printf("%d\n", findInSegment(testPoints[i], a, b));
-}
+		hull = getHull(points, pointCount);
+		glPointSize(5);
+	}
+
+	void render(float delta){
+		glColor3f(1, 0, 0);
+		glBegin(GL_LINE_LOOP);
+		for (vector<vec2>::iterator it = hull.begin(); it < hull.end(); it++)
+			glVertex2fv((*it).data());
+		glEnd();
+
+		glBegin(GL_POINTS);
+		glColor3f(1, 1, 1);
+		for (int i = 0; i < pointCount; i++)
+			glVertex2fv(points[i].data());
+		glEnd();
+	}
+	vector<vec2> hull;
+
+	vec2* points;
+	int pointCount;
+};
+
+
 
 class ConvexityScene : public Scene{
 public:

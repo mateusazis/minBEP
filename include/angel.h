@@ -22,6 +22,7 @@ private:
 	float v[2];
 };
 
+bool operator ==(vec2 v, vec2 other);
 vec2 operator +(vec2 v, vec2 other);
 vec2 operator -(vec2 v, vec2 other);
 vec2 operator *(vec2 v, float value);
@@ -46,5 +47,6 @@ private:
 vec2 operator *(mat3 m, vec2 v);
 
 float random();
+float random(float min, float max);
 
 #endif
