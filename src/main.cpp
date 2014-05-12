@@ -403,6 +403,8 @@ int getQuestionNumber(){
 }
 
 void setupExercises(){
+	s = new IncrementalTriangulationScene();
+	return;
 	int question = getQuestionNumber();
 	switch (question){
 	case 1:

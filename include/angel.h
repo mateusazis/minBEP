@@ -18,6 +18,8 @@ public:
 	int crossSign(vec2 other);
 	float sqrDistance(vec2 other);
 
+	float orientedAngle();
+
 private:
 	float v[2];
 };

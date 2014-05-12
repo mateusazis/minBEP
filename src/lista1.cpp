@@ -1,9 +1,11 @@
 #include "../include/lista1.h"
 #include "../include/GeneralProblems.h"
+#include "../include/Utils.h"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <deque>
 
 using namespace std;
 
@@ -426,49 +428,70 @@ static int getCenterMostVertex(vec2 * points, int count){
 	return resp;
 }
 
+static void _findVisibleVertices(deque<int> & hull, vec2* points, vec2 newPoint, int & outTopMost, int & outBottomMost){
+	outTopMost = 0;
+	outBottomMost = 0;
+	float angleTopMost = (points[hull[0]] - newPoint).orientedAngle();
+	float angleBottomMost = angleTopMost;
+	for (int j = 1; j < hull.size(); j++){
+		vec2 v = points[hull[j]];
+		float angle = (v - newPoint).orientedAngle();
+		if (angle > angleBottomMost){
+			angleBottomMost = angle;
+			outBottomMost = j;
+		}
+		if (angle < angleTopMost)					{
+			angleTopMost = angle;
+			outTopMost = j;
+		}
+	}
+}
+
 vector<int> incrementalTriangulate(vec2 *points, int count){
-	vector<int> resp;
+	vector<int> resp; //índices dos vértices dos triângulos
 
-	if (count == 3){
-		resp.push_back(0);
-		resp.push_back(1);
-		resp.push_back(2);
-	}
-	else if (count > 3){
-		int centerMost = getCenterMostVertex(points, count);
-		PointTuple2 *tps = new PointTuple2[count - 1];
+	if (count >= 3){
+		vector<int> indices = PointSorter::byX(points, count); //índices dos pontos ordenados no eixo X
+		resp.push_back(indices[0]);
+		resp.push_back(indices[1]);
+		resp.push_back(indices[2]);
 
-		int n = 0;
-		for (int i = 0; i < count; i++){
-			if (i != centerMost)
-				tps[n++] = PointTuple2(points[i], points[centerMost], i);
+		deque<int> hull; //guardará, em sentido anti-horário, os índices dos vértices do fecho convexo
+		hull.push_back(indices[0]);
+		if (points[indices[1]].y() > points[indices[2]].y()){ //caso de 3 vértices: a ordem depende do Y
+			hull.push_back(indices[1]);
+			hull.push_back(indices[2]);
+		}
+		else {
+			hull.push_back(indices[2]);
+			hull.push_back(indices[1]);
 		}
 
-		qsort(tps, count - 1, sizeof(PointTuple2), comparePointTuple2);
-		
-		for (int i = 0; i < count - 1; i++){
-			int j = (i + 1) % (count - 1);
-			resp.push_back(tps[i].index);
-			resp.push_back(centerMost);
-			resp.push_back(tps[j].index);
-		}
+		for (int i = 3; i < indices.size(); i++){
+			vec2 newPoint = points[indices[i]];
 
-		for (int i = 0; i < count - 1; i++){
-			int j = (i + 1) % (count - 1);
-			int k = (i + 2) % (count - 1);
+			int topMost = 0;    //índice, no fecho, do vértice "mais anterior", ou seja, com menor ângulo
+			int bottomMost = 0; //índice, no fecho, do vértice "mais posterior", ou seja, com maior ângulo
+			_findVisibleVertices(hull, points, newPoint, topMost, bottomMost);
 
-			vec2 prev = tps[i].v;
-			vec2 curr = tps[j].v;
-			vec2 next = tps[k].v;
-			if ((prev - curr).crossSign(next - curr) > 0){
-				resp.push_back(tps[i].index);
-				resp.push_back(tps[j].index);
-				resp.push_back(tps[k].index);
+			int k = topMost;
+			while (k != bottomMost){ //insere triângulos envolvendo os vértices adjacentes do fecho e o novo vértice
+				int m = (k + 1) % hull.size();
+				resp.push_back(hull[k]);
+				resp.push_back(indices[i]);
+				resp.push_back(hull[m]);
+				k = (k + 1) % hull.size();
 			}
+
+			//apaga do fecho os pontos do trecho visível, exceto pelos extremos
+			if (bottomMost == 0)
+				hull.erase(hull.begin() + topMost + 1, hull.end());
+			else
+				hull.erase(hull.begin() + topMost + 1, hull.begin() + bottomMost);
+			
+			//insere o ponto atual onde o trecho apagado estava, substituindo-o
+			hull.insert(hull.begin() + topMost + 1, indices[i]);
 		}
-
-		delete[] tps;
 	}
-
 	return resp;
 }
