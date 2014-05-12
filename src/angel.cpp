@@ -57,6 +57,13 @@ float vec2::sqrDistance(vec2 other){
 	return diffX * diffX + diffY * diffY;
 }
 
+float vec2::orientedAngle(){
+	float resp = acos(x() / magnitude());
+	if (y() < 0)
+		resp = (2 * 3.14f) - resp;
+	return resp;
+}
+
 bool operator ==(vec2 v, vec2 other){
 	return v.x() == other.x() && v.y() == other.y();
 }

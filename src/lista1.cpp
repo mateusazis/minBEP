@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <deque>
 
 using namespace std;
 
@@ -95,7 +96,7 @@ static int findClosePoints(PointInfo* allPoints, vec2 reference, int start, int 
 
 /*Retorna a menor distância entre 2 pontos de um subgrupo.
 Coloca no índice de saída os índices desses pontos.*/
-static float _findClosestPair(vector<int> &points, int start, int end, int *index1, int *index2, int *aux1, int *aux2, vec2* p){
+static float _findClosestPair(PointInfo *points, int start, int end, int *index1, int *index2, int *aux1, int *aux2){
 	int len = end - start + 1;
 	if (len == 1){ 
 		/*No caso de um elemento, retorna distância infinita em vez de 0, 
@@ -108,8 +109,8 @@ static float _findClosestPair(vector<int> &points, int start, int end, int *inde
 		int resp1i, resp1j, resp2i, resp2j;
 
 		//Recursivamente, descobre os pares mais próximos nos grupos à esquerda e à direita
-		float best1 = _findClosestPair(points, start, middle, &resp1i, &resp1j, aux1, aux2, p);
-		float best2 = _findClosestPair(points, middle + 1, end, &resp2i, &resp2j, aux1, aux2, p);
+		float best1 = _findClosestPair(points, start, middle, &resp1i, &resp1j, aux1, aux2);
+		float best2 = _findClosestPair(points, middle + 1, end, &resp2i, &resp2j, aux1, aux2);
 
 		int respi, respj;
 		float best;
@@ -121,13 +122,13 @@ static float _findClosestPair(vector<int> &points, int start, int end, int *inde
 		}
 
 		//encontra os pontos à esquerda e à direita que são candidatos a estarem mais próximos
-		vec2 reference = p[points[middle]];
+		vec2 reference = *(points[middle].v);
 		int sizeLeft =  findClosePoints(points, reference,      start, middle, aux1, best, true);
 		int sizeRight = findClosePoints(points, reference, middle + 1,    end, aux2, best, false);
 
 		//verifica se algum deles está mais próximo
 		for (int i = 0; i < sizeLeft; i++){
-			PointInfo & pi = p[points[aux1[i]];
+			PointInfo & pi = points[aux1[i]];
 			for (int j = 0; j < sizeRight; j++){
 				PointInfo & pj = points[aux2[j]];
 				float newDist = pi.sqrDistance(pj);
@@ -149,15 +150,18 @@ pair<int, int> findClosestPair(vec2 *points, int count){
 		*aux2 = new int[count];
 
 	//Cria e ordena uma cópia dos pontos, preservando os índices iniciais
-	vector<int> sortedPoints = PointSorter::byX(points, count);
+	PointInfo* copy = new PointInfo[count];
+	for (int i = 0; i < count; i++)
+		copy[i] = PointInfo(points+i, i);
+	qsort(copy, count, sizeof(PointInfo), PointInfo::compareX);
 	
 	int a, b; //índices no array ordenado
-	_findClosestPair(sortedPoints, 0, count - 1, &a, &b, aux1, aux2);
+	_findClosestPair(copy, 0, count - 1, &a, &b, aux1, aux2);
 	
 	//Recupera os índices no array de entrada
-	pair<int, int> resp(sortedPoints[a], sortedPoints[b]);
+	pair<int, int> resp(copy[a].index, copy[b].index);
 
-	delete[] aux1, aux2;
+	delete[] copy, aux1, aux2;
 
 	return resp;	
 }
@@ -424,49 +428,70 @@ static int getCenterMostVertex(vec2 * points, int count){
 	return resp;
 }
 
+static void _findVisibleVertices(deque<int> & hull, vec2* points, vec2 newPoint, int & outTopMost, int & outBottomMost){
+	outTopMost = 0;
+	outBottomMost = 0;
+	float angleTopMost = (points[hull[0]] - newPoint).orientedAngle();
+	float angleBottomMost = angleTopMost;
+	for (int j = 1; j < hull.size(); j++){
+		vec2 v = points[hull[j]];
+		float angle = (v - newPoint).orientedAngle();
+		if (angle > angleBottomMost){
+			angleBottomMost = angle;
+			outBottomMost = j;
+		}
+		if (angle < angleTopMost)					{
+			angleTopMost = angle;
+			outTopMost = j;
+		}
+	}
+}
+
 vector<int> incrementalTriangulate(vec2 *points, int count){
-	vector<int> resp;
+	vector<int> resp; //índices dos vértices dos triângulos
 
-	if (count == 3){
-		resp.push_back(0);
-		resp.push_back(1);
-		resp.push_back(2);
-	}
-	else if (count > 3){
-		int centerMost = getCenterMostVertex(points, count);
-		PointTuple2 *tps = new PointTuple2[count - 1];
+	if (count >= 3){
+		vector<int> indices = PointSorter::byX(points, count); //índices dos pontos ordenados no eixo X
+		resp.push_back(indices[0]);
+		resp.push_back(indices[1]);
+		resp.push_back(indices[2]);
 
-		int n = 0;
-		for (int i = 0; i < count; i++){
-			if (i != centerMost)
-				tps[n++] = PointTuple2(points[i], points[centerMost], i);
+		deque<int> hull; //guardará, em sentido anti-horário, os índices dos vértices do fecho convexo
+		hull.push_back(indices[0]);
+		if (points[indices[1]].y() > points[indices[2]].y()){ //caso de 3 vértices: a ordem depende do Y
+			hull.push_back(indices[1]);
+			hull.push_back(indices[2]);
+		}
+		else {
+			hull.push_back(indices[2]);
+			hull.push_back(indices[1]);
 		}
 
-		qsort(tps, count - 1, sizeof(PointTuple2), comparePointTuple2);
-		
-		for (int i = 0; i < count - 1; i++){
-			int j = (i + 1) % (count - 1);
-			resp.push_back(tps[i].index);
-			resp.push_back(centerMost);
-			resp.push_back(tps[j].index);
-		}
+		for (int i = 3; i < indices.size(); i++){
+			vec2 newPoint = points[indices[i]];
 
-		for (int i = 0; i < count - 1; i++){
-			int j = (i + 1) % (count - 1);
-			int k = (i + 2) % (count - 1);
+			int topMost = 0;    //índice, no fecho, do vértice "mais anterior", ou seja, com menor ângulo
+			int bottomMost = 0; //índice, no fecho, do vértice "mais posterior", ou seja, com maior ângulo
+			_findVisibleVertices(hull, points, newPoint, topMost, bottomMost);
 
-			vec2 prev = tps[i].v;
-			vec2 curr = tps[j].v;
-			vec2 next = tps[k].v;
-			if ((prev - curr).crossSign(next - curr) > 0){
-				resp.push_back(tps[i].index);
-				resp.push_back(tps[j].index);
-				resp.push_back(tps[k].index);
+			int k = topMost;
+			while (k != bottomMost){ //insere triângulos envolvendo os vértices adjacentes do fecho e o novo vértice
+				int m = (k + 1) % hull.size();
+				resp.push_back(hull[k]);
+				resp.push_back(indices[i]);
+				resp.push_back(hull[m]);
+				k = (k + 1) % hull.size();
 			}
+
+			//apaga do fecho os pontos do trecho visível, exceto pelos extremos
+			if (bottomMost == 0)
+				hull.erase(hull.begin() + topMost + 1, hull.end());
+			else
+				hull.erase(hull.begin() + topMost + 1, hull.begin() + bottomMost);
+			
+			//insere o ponto atual onde o trecho apagado estava, substituindo-o
+			hull.insert(hull.begin() + topMost + 1, indices[i]);
 		}
-
-		delete[] tps;
 	}
-
 	return resp;
 }

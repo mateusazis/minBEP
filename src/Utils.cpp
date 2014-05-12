@@ -50,7 +50,7 @@ public:
 				float mag = diff.magnitude();
 				angles[i] = acos(diff.x() / mag);
 				if (diff.y() < 0)
-					angles[i] *= -1;
+					angles[i] = (2 * 3.14f) - angles[i];
 			}
 		}
 	}
@@ -62,7 +62,7 @@ public:
 	float* angles;
 };
 
-vector<int> byPolarAngle(vec2 *points, int count, vec2 center, int ignored = -1){
+vector<int> PointSorter::byPolarAngle(vec2 *points, int count, vec2 center, int ignored){
 	vector<int> resp;
 	for (int i = 0; i < count; i++)
 		if (i != ignored)
