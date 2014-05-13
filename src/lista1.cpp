@@ -43,50 +43,19 @@ bool disjointsTriangles(vec2 tri1[3], vec2 tri2[3]){
 
 //Lista 1 - Exercícios sobre Problemas Fundamentais - Questão 3
 
-//Classe auxiliar, que armazena uma referência para um vetor e o índice do array ao qual ele pertencia.
-class PointInfo{
-public:
-	PointInfo(){}
-	PointInfo(vec2 *vec, int pos) : v(vec), index(pos){	}
-	PointInfo(const PointInfo &other) : v(other.v), index(other.index){	}
-
-	float x(){
-		return v->x();
-	}
-	float y(){
-		return v->y();
-	}
-
-	float sqrDistance(PointInfo other){
-		return v->sqrDistance(*(other.v));
-	}
-
-	static int compareX(const void *v1, const void *v2){
-		PointInfo *a = (PointInfo*)v1;
-		PointInfo *b = (PointInfo*)v2;
-		if (a->x() < b->x())
-			return -1;
-		if (a->x() == b->x())
-			return 0;
-		return 1;
-	}
-	vec2 *v;
-	int index;
-};
-
-/*Procura pontos que estejam à esquerda ou à direita de reference, 
+/*Retorna a quatnidade de pontos que estejam à esquerda ou à direita de reference, 
 usando uma distância máxima de maxDist no eixo X e 2*maxDist no Y*/
-static int findClosePoints(PointInfo* allPoints, vec2 reference, int start, int end, int* dest, float maxDist, bool searchLeft){
+static int findClosePoints(const int* indices, vec2 reference, int start, int end, int* dest, float maxDist, bool searchLeft, vec2* pts){
 	int count = 0;
 	int i = searchLeft ? end : start; //índice do primeiro elemento
 	int increment = searchLeft ? -1 : 1;
 	int last = searchLeft ? start - 1 : end + 1; //primeiro índice inválido após o último elemento
-	PointInfo candidate;
+	vec2 candidate;
 	while (i != last){
-		candidate = allPoints[i];
+		candidate = pts[indices[i]];
 		float distX = abs(candidate.x() - reference.x()),
 			distY = abs(candidate.y() - reference.y());
-		if (distX <= maxDist && distY <= 2 * maxDist)
+		if (maxDist == HUGE_VALF || (distX <= maxDist && distY <= 2 * maxDist))
 			dest[count++] = i;
 
 		i += increment;
@@ -96,52 +65,51 @@ static int findClosePoints(PointInfo* allPoints, vec2 reference, int start, int 
 
 /*Retorna a menor distância entre 2 pontos de um subgrupo.
 Coloca no índice de saída os índices desses pontos.*/
-static float _findClosestPair(PointInfo *points, int start, int end, int *index1, int *index2, int *aux1, int *aux2){
+static float _findClosestPair(const int *indices, int start, int end, pair<int, int> & resp, int *aux1, int *aux2, vec2* pts){
 	int len = end - start + 1;
 	if (len == 1){ 
 		/*No caso de um elemento, retorna distância infinita em vez de 0, 
 		para que sempre seja pareado com algum ponto em outro grupo.*/
-		*index1 = *index2 = start;
+		resp = pair<int, int>(start, start);
 		return HUGE_VALF;
 	}
 	else {
 		int middle = (start + end) / 2;
-		int resp1i, resp1j, resp2i, resp2j;
+		pair<int, int> resp1, resp2;
 
 		//Recursivamente, descobre os pares mais próximos nos grupos à esquerda e à direita
-		float best1 = _findClosestPair(points, start, middle, &resp1i, &resp1j, aux1, aux2);
-		float best2 = _findClosestPair(points, middle + 1, end, &resp2i, &resp2j, aux1, aux2);
+		float best1 = _findClosestPair(indices, start, middle, resp1, aux1, aux2, pts);
+		float best2 = _findClosestPair(indices, middle + 1, end, resp2, aux1, aux2, pts);
 
-		int respi, respj;
 		float best;
 		if (best1 < best2)	{
-			respi = resp1i; respj = resp1j; best = best1;
+			resp = resp1;
+			best = best1;
 		}
 		else {
-			respi = resp2i; respj = resp2j; best = best2;
+			resp = resp2;
+			best = best2;
 		}
 
 		//encontra os pontos à esquerda e à direita que são candidatos a estarem mais próximos
-		vec2 reference = *(points[middle].v);
-		int sizeLeft =  findClosePoints(points, reference,      start, middle, aux1, best, true);
-		int sizeRight = findClosePoints(points, reference, middle + 1,    end, aux2, best, false);
+		vec2 reference = pts[indices[middle]];
+		int sizeLeft  = findClosePoints(indices, reference,   start, middle, aux1, best,  true, pts);
+		int sizeRight = findClosePoints(indices, reference, middle + 1, end, aux2, best, false, pts);
 
 		//verifica se algum deles está mais próximo
 		for (int i = 0; i < sizeLeft; i++){
-			PointInfo & pi = points[aux1[i]];
+			int pi = indices[aux1[i]];
 			for (int j = 0; j < sizeRight; j++){
-				PointInfo & pj = points[aux2[j]];
-				float newDist = pi.sqrDistance(pj);
+				int pj = indices[aux2[j]];
+				float newDist = (pts[pi] - pts[pj]).magnitude();
 				if (newDist < best){
 					best = newDist;
-					respi = aux1[i];
-					respj = aux2[j];
+					resp = pair<int, int>(pi, pj);
 				}
 			}
 		}
-		*index1 = respi; *index2 = respj;
 	}
-	return points[*index1].sqrDistance(points[*index2]);
+	return pts[resp.first].sqrDistance(pts[resp.second]);
 }
 
 pair<int, int> findClosestPair(vec2 *points, int count){
@@ -150,18 +118,12 @@ pair<int, int> findClosestPair(vec2 *points, int count){
 		*aux2 = new int[count];
 
 	//Cria e ordena uma cópia dos pontos, preservando os índices iniciais
-	PointInfo* copy = new PointInfo[count];
-	for (int i = 0; i < count; i++)
-		copy[i] = PointInfo(points+i, i);
-	qsort(copy, count, sizeof(PointInfo), PointInfo::compareX);
+	vector<int> sortedIndices = PointSorter::byX(points, count);
 	
-	int a, b; //índices no array ordenado
-	_findClosestPair(copy, 0, count - 1, &a, &b, aux1, aux2);
-	
-	//Recupera os índices no array de entrada
-	pair<int, int> resp(copy[a].index, copy[b].index);
+	pair<int, int> resp;
+	_findClosestPair(sortedIndices.data(), 0, count - 1, resp, aux1, aux2, points);
 
-	delete[] copy, aux1, aux2;
+	delete[] aux1, aux2;
 
 	return resp;	
 }
@@ -306,22 +268,22 @@ bool convex(vec2* polygon, int pointCount){
 }
 
 //Lista 1 - Exercícios sobre Polígonos - Questão 4
-static bool isCenterOfEar(vector<PointInfo> v, int i){
+static bool isCenterOfEar(vector<int> v, int i, vec2* points){
 	int size = v.size();
 	int previous = i - 1;
 	if (previous < 0)
 		previous += size;
 	int next = (i + 1) % size;
 
-	vec2 vPrevious = *v[previous].v,
-		vI = *v[i].v,
-		vNext = *v[next].v;
+	vec2 vPrevious = points[v[previous]],
+		vI = points[v[i]],
+		vNext = points[v[next]];
 
 	if ((vPrevious - vI).crossSign(vNext - vI) < 0)
 		return false;
 
 	for (int j = (next + 1) % size; j != previous; j = (j + 1) % size){
-		TriangleLocalization l = findInTriangle(*v[j].v, vPrevious, vI, vNext);
+		TriangleLocalization l = findInTriangle(points[v[j]], vPrevious, vI, vNext);
 		if (l == INSIDE)
 			return false;
 	}
@@ -335,20 +297,20 @@ vector<int> earClippingTriangulate(vec2 *points, int count){
 	vector<int> resp;
 
 	//Cria uma cópia dos vértices, salvando os índices originais
-	vector<PointInfo> vertices;
+	vector<int> vertices;
 	for (int i = 0; i < count; i++)
-		vertices.push_back(PointInfo(points + i, i));
+		vertices.push_back(i);
 
 	for (int i = 0; i < vertices.size(); i++){
-		if (isCenterOfEar(vertices, i)){
+		if (isCenterOfEar(vertices, i, points)){
 			//Sempre que um vértice, o anterior e o posterior formarem uma orelha, remover esse vértice do polígono.
 			int previous = i - 1;
 			if (previous < 0)
 				previous += vertices.size();
 			int next = (i + 1) % vertices.size();
-			resp.push_back(vertices[previous].index);
-			resp.push_back(vertices[i].index);
-			resp.push_back(vertices[next].index);
+			resp.push_back(vertices[previous]);
+			resp.push_back(vertices[i]);
+			resp.push_back(vertices[next]);
 			vertices.erase(vertices.begin() + i);
 			i--;
 		}
