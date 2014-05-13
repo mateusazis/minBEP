@@ -169,6 +169,14 @@
   <ItemGroup>
     <Text Include="exercícios.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\1400003115_62723.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\res.rs">
+      <FileType>Document</FileType>
+    </ResourceCompile>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

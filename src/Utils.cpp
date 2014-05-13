@@ -3,7 +3,7 @@
 
 using namespace std;
 
-enum Coordinate {X, Y};
+static enum Coordinate {X, Y};
 
 class CoordinateComparator {
 public:

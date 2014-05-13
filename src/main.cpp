@@ -13,13 +13,12 @@ Scene *s;
 clock_t startT, endT;
 float timeDiff;
 
+/* Callbacks da Freeglut */
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	s->render(timeDiff);
 	glutSwapBuffers();
 }
-
-
 
 void idle(){
 	endT = clock();
@@ -34,9 +33,8 @@ void onKeyboard(unsigned char c, int x, int y){
 	const unsigned char ESC = 27;
 	if (c == ESC)
 		exit(0);
-	else{
+	else
 		s->onKey(c);
-	}
 }
 
 void onMouse(int button, int pressed, int x, int y){
@@ -50,6 +48,7 @@ void onMouseMove(int x, int y){
 	Input::updateMouse(mouseX, mouseY);
 }
 
+/* Menu de exercícios */
 int getQuestionNumber(){
 	printf("Escolha um exercício a executar:\n");
 	printf("1) Primitivas Geométricas - Questão 4 (ângulo convexo)\n");
@@ -66,8 +65,6 @@ int getQuestionNumber(){
 }
 
 void setupExercises(){
-	s = new IncrementalTriangulationScene();
-	return;
 	int question = getQuestionNumber();
 	switch (question){
 	case 1:
