@@ -59,14 +59,13 @@ int getQuestionNumber(){
 	printf("6) Problemas fundamentais - Questão 2 (triângulos disjuntos)\n");
 	printf("7) Problemas fundamentais - Questão 3 (par mais próximo)\n");
 	printf("8) Problemas fundamentais - Questão 4 (triangulação incremental)\n");
+	printf("9) Problemas fundamentais - Questão 5 (métricas de triangulação)\n");
 	int resp;
 	scanf("%d", &resp);
 	return resp;
 }
 
 void setupExercises(){
-	s = new MetricsScene();
-	return;
 	int question = getQuestionNumber();
 	switch (question){
 	case 1:
@@ -92,6 +91,9 @@ void setupExercises(){
 		break;
 	case 8:
 		s = new IncrementalTriangulationScene();
+		break;
+	case 9:
+		s = new MetricsScene();
 		break;
 	}
 }
