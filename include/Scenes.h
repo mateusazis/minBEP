@@ -15,7 +15,7 @@ public:
 	void onKey(char c);
 
 	const float SIZE = 2;
-	vec2 u, v, w;
+	vec2 u, v;
 };
 
 class DisjointsTriangles : public Scene{

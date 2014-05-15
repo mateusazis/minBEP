@@ -24,10 +24,11 @@ void ConvexityScene::render(float delta){
 	glVertex2fv(u.data());
 	glVertex2f(0, 0);
 	glVertex2fv(v.data());
+
 	vec2 mouse = Input::mousePosition();
-	w = vec2((mouse.x() - 200) / 100.0f * SIZE, (mouse.y() - 200) / 100.0f * SIZE);
+	vec2 w = vec2((mouse.x() - 200) / 100.0f * SIZE, (mouse.y() - 200) / 100.0f * SIZE);
 	Convexidade c = getConvexity(u, v, w);
-	glColor3f(c == NAO, c == SIM, 0);
+	glColor3fv(successColors[c == SIM]);
 	glVertex2f(0, 0);
 	glVertex2fv(w.data());
 	glEnd();
