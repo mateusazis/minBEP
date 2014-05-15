@@ -57,6 +57,10 @@ float vec2::sqrDistance(vec2 other){
 	return diffX * diffX + diffY * diffY;
 }
 
+float vec2::distance(vec2 other){
+	return sqrt(sqrDistance(other));
+}
+
 float vec2::orientedAngle(){
 	float resp = acos(x() / magnitude());
 	if (y() < 0)

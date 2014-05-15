@@ -301,7 +301,7 @@ vector<int> earClippingTriangulate(vec2 *points, int count){
 	for (int i = 0; i < count; i++)
 		vertices.push_back(i);
 
-	for (int i = 0; i < vertices.size(); i++){
+	for (int i = 0; i < vertices.size() && vertices.size() >= 3; i++){
 		if (isCenterOfEar(vertices, i, points)){
 			//Sempre que um vértice, o anterior e o posterior formarem uma orelha, remover esse vértice do polígono.
 			int previous = i - 1;
@@ -331,7 +331,7 @@ static void _findVisibleVertices(deque<int> & hull, vec2* points, vec2 newPoint,
 			angleBottomMost = angle;
 			outBottomMost = j;
 		}
-		if (angle < angleTopMost)					{
+		if (angle < angleTopMost){
 			angleTopMost = angle;
 			outTopMost = j;
 		}
@@ -353,7 +353,7 @@ vector<int> incrementalTriangulate(vec2 *points, int count){
 		   é ineficiente em vectors. O uso de listas também é inadequado por não serem facilmente indexáveis.*/
 
 		hull.push_back(indices[0]);
-		if (points[indices[1]].y() > points[indices[2]].y()){ //caso de 3 vértices: a ordem depende do Y
+		if ((points[indices[1]] - points[indices[2]]).crossMag(points[indices[0]] - points[indices[1]]) > 0){
 			hull.push_back(indices[1]);
 			hull.push_back(indices[2]);
 		}
@@ -389,4 +389,83 @@ vector<int> incrementalTriangulate(vec2 *points, int count){
 		}
 	}
 	return resp;
+}
+
+//Questão 5
+void getAspectRatio(vec2* points, vector<int> &triangles, float &minRatio, float &maxRatio, float &average){
+	minRatio = HUGE_VALF;
+	maxRatio = 0;
+	float ratioSum = 0;
+	for (int i = 0; i < triangles.size(); i+=3){
+		float d1 = points[triangles[i]].distance(points[triangles[i + 1]]),
+			d2 = points[triangles[i]].distance(points[triangles[i + 2]]),
+			d3 = points[triangles[i+1]].distance(points[triangles[i + 2]]);
+		float minD = std::min(d1, std::min(d2, d3));
+		float maxD = std::max(d1, std::max(d2, d3));
+		float ratio = maxD / minD;
+		minRatio = std::min(minRatio, ratio);
+		maxRatio = std::max(maxRatio, ratio);
+		ratioSum += ratio;
+	}
+	average = ratioSum / (triangles.size() / 3);
+}
+
+void getSkewness(vec2* points, vector<int> &triangles, float &min, float &max, float &avg){
+	min = HUGE_VALF;
+	max = 0;
+	float sum = 0;
+	for (int i = 0; i < triangles.size(); i += 3){
+		vec2 p1 = points[triangles[i]],
+			p2 = points[triangles[i + 1]],
+			p3 = points[triangles[i + 2]];
+		float aT = triangleArea(p1, p2, p3);
+
+		float diameter = (p1.distance(p2) * p1.distance(p3) * p2.distance(p3)) / (2.0f * aT);
+		float r = diameter / 2.0f;
+		float aCT = (3.0f * r * r * sqrt(3)) / 4.0f;
+		float sk = aCT - aT;
+
+
+		min = std::min(min, sk);
+		max = std::max(max, sk);
+		sum += sk;
+	}
+	avg = sum / (triangles.size() / 3);
+}
+
+void getSmoothness(vec2* points, vector<int> &triangles, float &min, float &max, float &avg){
+	if (triangles.size() <= 3){
+		min = max = avg = 0;
+		return;
+	}
+	min = HUGE_VALF;
+	max = 0;
+	float sum = 0;
+	int count = 0;
+
+	for (int i = 0; i < triangles.size() - 3; i += 3){
+		vec2 p1 = points[triangles[i]],
+			p2 = points[triangles[i + 1]],
+			p3 = points[triangles[i + 2]];
+		float a1 = triangleArea(p1, p2, p3);
+
+		for (int j = i + 3; j < triangles.size(); j+=3){
+			int sharedVertices = 0;
+			vector<int>::iterator last = triangles.begin() + j + 3;
+			sharedVertices += std::find(triangles.begin() + j, last, triangles[i]) != last;
+			sharedVertices += std::find(triangles.begin() + j, last, triangles[i+1]) != last;
+			sharedVertices += std::find(triangles.begin() + j, last, triangles[i+2]) != last;
+			bool adjacents = sharedVertices > 1;
+			if (adjacents){
+				count++;
+				float a2 = triangleArea(points[triangles[j]], points[triangles[j+1]], points[triangles[j+2]]);
+				float diff = abs(a1 - a2);
+				min = std::min(min, diff);
+				max = std::max(max, diff);
+				sum += diff;
+			}
+		}
+	}
+	//delete [] checked;
+	avg = sum / count;
 }

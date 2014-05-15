@@ -65,6 +65,8 @@ int getQuestionNumber(){
 }
 
 void setupExercises(){
+	s = new MetricsScene();
+	return;
 	int question = getQuestionNumber();
 	switch (question){
 	case 1:

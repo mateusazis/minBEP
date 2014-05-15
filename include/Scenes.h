@@ -84,4 +84,21 @@ public:
 	bool isConvex;
 };
 
+typedef std::vector<int>(*TriangulationFunction)(vec2 *, int);
+
+class MetricsScene : public DivideAndConquerTriangulationScene{
+public:
+	MetricsScene();
+	void render(float delta);
+	void onPointAdded();
+	void onKey(char c);
+	void drawGUI();
+
+	TriangulationFunction funcs[3];
+	int funcIndex;
+	float ratioMin, ratioMax, ratioAvg;
+	float skMin, skMax, skAvg;
+	float smMin, smMax, smAvg;
+};
+
 #endif

@@ -11,4 +11,6 @@ public:
 	static std::vector<int> byPolarAngle(vec2 *points, int count, vec2 center, int ignored = -1);
 };
 
+float triangleArea(vec2 a, vec2 b, vec2 c);
+
 #endif

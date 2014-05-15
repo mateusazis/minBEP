@@ -71,3 +71,7 @@ vector<int> PointSorter::byPolarAngle(vec2 *points, int count, vec2 center, int 
 	std::sort(resp.begin(), resp.end(), PolarComparator(points, count, center));
 	return resp;
 }
+
+float triangleArea(vec2 a, vec2 b, vec2 c){
+	return abs((b - a).crossMag(c - a)) / 2.0f;
+}

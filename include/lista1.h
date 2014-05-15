@@ -38,4 +38,9 @@ std::pair<int, int> findClosestPair(vec2 *points, int count);
 //Questão 4
 std::vector<int> incrementalTriangulate(vec2 *points, int count);
 
+//Questão 5
+void getAspectRatio(vec2* points, std::vector<int> &triangles, float &min, float &max, float &average);
+void getSkewness(vec2* points, std::vector<int> &triangles, float &min, float &max, float &average);
+void getSmoothness(vec2* points, std::vector<int> &triangles, float &min, float &max, float &average);
+
 #endif
