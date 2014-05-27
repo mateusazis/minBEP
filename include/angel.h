@@ -20,6 +20,7 @@ public:
 	float distance(vec2 other);
 
 	float orientedAngle();
+	vec2 normalized();
 
 private:
 	float v[2];

@@ -1,5 +1,4 @@
 #include "../include/Scenes.h"
-#include "../include/lista1.h"
 #include "../include/Input.h"
 
 #include <GL/freeglut.h>
@@ -8,10 +7,12 @@
 #include <cstdlib>
 #include <ctime>
 #include <clocale>
+#include <deque>
 
-Scene *s;
-clock_t startT, endT;
-float timeDiff;
+static Scene *s;
+static clock_t startT, endT;
+static float timeDiff;
+const int WINDOW_SIZE = 400;
 
 /* Callbacks da Freeglut */
 void display(){
@@ -44,59 +45,84 @@ void onMouse(int button, int pressed, int x, int y){
 
 void onMouseMove(int x, int y){
 	int mouseX = x;
-	int mouseY = 400-y;
+	int mouseY = WINDOW_SIZE - y;
 	Input::updateMouse(mouseX, mouseY);
 }
 
-/* Menu de exercícios */
-int getQuestionNumber(){
-	printf("Escolha um exercício a executar:\n");
-	printf("1) Primitivas Geométricas - Questão 4 (ângulo convexo)\n");
-	printf("2) Polígonos - Questão 1 (polígono convexo)\n");
-	printf("3) Polígonos - Questão 2 (triangulação por divisão e conquista)\n");
-	printf("4) Polígonos - Questão 4 (triangulação por corte de orelhas)\n");
-	printf("5) Problemas fundamentais - Questão 1 (localização em triângulo)\n");
-	printf("6) Problemas fundamentais - Questão 2 (triângulos disjuntos)\n");
-	printf("7) Problemas fundamentais - Questão 3 (par mais próximo)\n");
-	printf("8) Problemas fundamentais - Questão 4 (triangulação incremental)\n");
-	printf("9) Problemas fundamentais - Questão 5 (métricas de triangulação)\n");
-	int resp;
-	scanf("%d", &resp);
-	return resp;
-}
-
-void setupExercises(){
-	int question = getQuestionNumber();
-	switch (question){
-	case 1:
-		s = new ConvexityScene();
-		break;
-	case 2:
-		s = new ConvexPolygonScene();
-		break;
-	case 3:
-		s = new DivideAndConquerTriangulationScene();
-		break;
-	case 4:
-		s = new EarClippingTriangulationScene(); //trocar para ear cutting
-		break;
-	case 5:
-		s = new TriangleScene();
-		break;
-	case 6:
-		s = new DisjointsTriangles();
-		break;
-	case 7:
-		s = new ClosestPairScene();
-		break;
-	case 8:
-		s = new IncrementalTriangulationScene();
-		break;
-	case 9:
-		s = new MetricsScene();
-		break;
+class MinBEPScene : public Scene {
+	void render(float delta){
+		if (points.size() >= 2){
+			float w = 20;
+			for (int i = 0; i < points.size() - 1; i++)
+				drawFirstCorridor(points[i], points[i + 1], w);
+			for (int i = 1; i < points.size() - 1; i++)
+				drawJoint(points[i-1], points[i], points[i + 1], w);
+		}
 	}
-}
+
+	vec2 getNormal(vec2 a, vec2 b){
+		vec2 diff = (b - a).normalized();
+		return mat3::rotation(3.14f / 2.0f) * diff;
+	}
+
+	std::pair<float, float> getLineCoefs(vec2 a, vec2 b){
+		float c1 = (b.y() - a.y()) / (b.x() - a.x());
+		float c2 = a.y() - a.x() * c1;
+		return std::pair<float, float>(c1, c2);
+	}
+
+	vec2 findIntersection(vec2 srcA, vec2 dirA, vec2 srcB, vec2 dirB){
+		std::pair<float, float> c1 = getLineCoefs(srcA, srcA + dirA),
+			c2 = getLineCoefs(srcB, srcB + dirB);
+
+		float x = (c1.second - c2.second) / (c2.first - c1.first);
+		float y = c1.first * x + c1.second;
+		return vec2(x, y);
+	}
+
+	void drawJoint(vec2 a, vec2 b, vec2 c, float width){
+		vec2 normalAB = getNormal(a, b),
+			normalBC = getNormal(b, c);
+		float hWidth = width / 2.0f;
+
+		float sign = (a - b).crossSign(c - b);
+		vec2 v1 = b + normalAB * hWidth * sign,
+			v2 = b + normalBC * hWidth * sign;
+		vec2 vertices[] = {
+			b,
+			v1,
+			findIntersection(v1, b - a, v2, c - b),
+			v2
+		};
+		glColor3f(1, 1, 1);
+		glBegin(GL_QUADS);
+		for (int i = 0; i < 4; i++)
+			glVertex2fv(vertices[i].data());
+		glEnd();
+	}
+
+	void drawFirstCorridor(vec2 a, vec2 b, float width){
+		vec2 normal = getNormal(a, b);
+		float hWidth = width / 2.0f;
+		vec2 vertices[] = {
+			a + normal * hWidth,
+			a - normal * hWidth,
+			b - normal * hWidth,
+			b + normal * hWidth
+		};
+		glColor3f(1, 1, 1);
+		glBegin(GL_QUADS);
+		for (int i = 0; i < 4; i++)
+			glVertex2fv(vertices[i].data());
+		glEnd();
+	}
+
+	void onMouseDown(){
+		points.push_back(Input::mousePosition());
+	}
+
+	std::deque<vec2> points;
+};
 
 int main(int argc, char **argv){
 	setlocale(LC_ALL, "Portuguese");
@@ -105,22 +131,23 @@ int main(int argc, char **argv){
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowSize(400, 400);
+	glutInitWindowSize(WINDOW_SIZE, WINDOW_SIZE);
 	
 	glutCreateWindow("Lista 1 - Geometria Computacional");
-	glutHideWindow();
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
 	glutKeyboardFunc(onKeyboard);
 	glutPassiveMotionFunc(onMouseMove);
 	glutMouseFunc(onMouse);
-	
-	setupExercises();
-
-	glutShowWindow();
 
 	glClearColor(0, 0, 0, 1);
-	glOrtho(-2, 2, -2, 2, -2, 2);
+
+	
+	float hSize = WINDOW_SIZE / 2.0f;
+	glMatrixMode(GL_PROJECTION);
+	glOrtho(0, WINDOW_SIZE, 0, WINDOW_SIZE, -hSize, hSize);
+	glMatrixMode(GL_MODELVIEW);
+	s = new MinBEPScene();
 	glutMainLoop();
 	return 0;
 }

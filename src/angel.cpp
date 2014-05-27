@@ -68,6 +68,10 @@ float vec2::orientedAngle(){
 	return resp;
 }
 
+vec2 vec2::normalized(){
+	return (*this) / this->magnitude();
+}
+
 bool operator ==(vec2 v, vec2 other){
 	return v.x() == other.x() && v.y() == other.y();
 }
