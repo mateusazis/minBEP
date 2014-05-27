@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{34D6CDC6-0B80-4E4A-87AB-A99F1965AF56}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>GC_estudos</RootNamespace>
+    <RootNamespace>MinBEP</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -76,8 +76,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\UFF\Mestrado\GC\code\GC_estudos\dependencies\freeglut-2.8.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\UFF\Mestrado\GC\code\GC_estudos\dependencies\freeglut-2.8.1\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\UFF\Mestrado\GC\code\MinBEP\dependencies\freeglut-2.8.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\UFF\Mestrado\GC\code\MinBEP\dependencies\freeglut-2.8.1\lib\x86;$(LibraryPath)</LibraryPath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
