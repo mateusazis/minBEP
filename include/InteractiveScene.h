@@ -14,7 +14,7 @@ public:
 	InteractiveScene(int windowSize);
 	virtual void render(float delta);
 	void onMouseDown();
-	void onKey(char c);
+	virtual void onKey(char c);
 
 	virtual void onPointAdded() = 0;
 	virtual const GLfloat* getDrawColor();

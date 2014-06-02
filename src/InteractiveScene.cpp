@@ -2,8 +2,6 @@
 #include "../include/Input.h"
 
 InteractiveScene::InteractiveScene(int windowSize){
-	glMatrixMode(GL_PROJECTION);
-	glOrtho(0, windowSize / 2.0f, 0, windowSize / 2.0f, -1, 1);
 }
 
 void InteractiveScene::render(float delta){

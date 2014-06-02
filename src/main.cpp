@@ -8,11 +8,16 @@
 #include <ctime>
 #include <clocale>
 #include <deque>
+#include "../include/lista1.h"
+#include "../include/GeneralProblems.h"
+#include <algorithm>
 
 static Scene *s;
 static clock_t startT, endT;
 static float timeDiff;
 const int WINDOW_SIZE = 400;
+
+using namespace std;
 
 /* Callbacks da Freeglut */
 void display(){
@@ -48,6 +53,184 @@ void onMouseMove(int x, int y){
 	int mouseY = WINDOW_SIZE - y;
 	Input::updateMouse(mouseX, mouseY);
 }
+
+class Funnel {
+public:
+	Funnel(){}
+	Funnel(int startVertex, int adjacentVertex){
+		vertices.push_back(adjacentVertex);
+		vertices.push_back(startVertex);
+		cuspIndex = 1;
+	}
+
+	int getTangent(int end, const std::vector<vec2> points){
+		//search for a such that a-end does not belong to the frustum
+		
+		/*for (int i = 0; i < points.size(); i++){
+			for (int j = 0; j < vertices.size() - 1; j++){
+				if (!segmentIntersects(points[i], points[end], points[vertices[j]], points[vertices[j + 1]]))
+					return i;
+			}
+		}*/
+
+		bool foundIntersection = false;
+		for (int j = 0; j < vertices.size() - 1; j++){
+			if (j != cuspIndex && j != cuspIndex + 1){
+				if (segmentIntersects(points[vertices[cuspIndex]], points[end], points[vertices[j]], points[vertices[j + 1]]))
+				{
+					foundIntersection = true;
+					break;
+				}
+			}
+		}
+		if (!foundIntersection){
+			printf("ret case 1\n");
+			return vertices[cuspIndex];
+		}
+
+
+		int bestIndex = 0;
+		float bestAngle = 1;
+		vec2 vEnd = points[end];
+		for (int i = 0; i < cuspIndex; i++){
+			vec2 v = points[vertices[i]];
+			vec2 next = points[vertices[i+1]];
+			vec2 diff1 = (v - next).normalized(),
+				diff2 = (vEnd - next).normalized();
+			float dot = abs(diff1.dot(diff2));
+			if (dot < bestAngle){
+				bestAngle = dot;
+				bestIndex = vertices[i];
+			}
+		}
+
+		for (int i = vertices.size() - 1; i > cuspIndex; i--){
+			vec2 v = points[vertices[i]];
+			vec2 next = points[vertices[i - 1]];
+			vec2 diff1 = (v - next).normalized(),
+				diff2 = (vEnd - next).normalized();
+			float dot = abs(diff1.dot(diff2));
+			if (dot < bestAngle){
+				bestAngle = dot;
+				bestIndex = vertices[i];
+			}
+		}
+
+		return bestIndex;
+	}
+	static Funnel forward(std::deque<int>::iterator it, int v, int end){
+		Funnel resp;
+		while (*it != v){
+			resp.vertices.push_back(*it);
+			it++;
+		}
+		resp.vertices.push_back(v);
+		resp.vertices.push_back(end);
+		resp.cuspIndex = resp.vertices.size() - 1;
+
+		return resp;
+	}
+
+	static Funnel back(std::deque<int>::reverse_iterator it, int v, int end){
+		Funnel resp;
+		resp.vertices.push_back(end);
+		resp.vertices.push_back(v);
+		resp.cuspIndex = 0;
+
+		while (*it != v){
+			resp.vertices.push_back(*it);
+			it++;
+		}
+
+		return resp;
+	}
+
+
+	int cuspIndex;
+	std::deque<int> vertices;
+};
+
+class S2 : public DivideAndConquerTriangulationScene {
+public:
+	S2() : DivideAndConquerTriangulationScene(), startIndex(0), endIndex(0){
+		glPointSize(10);
+	}
+
+	void render(float delta){
+		DivideAndConquerTriangulationScene::render(delta);
+
+		if (points.size() > 0){
+			glBegin(GL_POINTS);
+			glColor3f(0, 1, 0);
+			glVertex2fv(points[startIndex].data());
+			glColor3f(1, 1, 0);
+			glVertex2fv(points[endIndex].data());
+			glEnd();
+		}
+
+		if (SP.size() >= 2){
+			glColor3f(0, 0, 1);
+			glBegin(GL_LINE_STRIP);
+			for (std::vector<int>::iterator it = SP.begin(); it < SP.end(); it++){
+				glVertex2fv(points[*it].data());
+			}
+			glEnd();
+		}
+	}
+
+	void onPointAdded(){
+		DivideAndConquerTriangulationScene::onPointAdded();
+		printf("POints: %d\n", points.size());
+	}
+
+	void onKey(char c){
+		DivideAndConquerTriangulationScene::onKey(c);
+		switch (c){
+		case 'a':
+			startIndex = (startIndex + 1) % points.size();
+			break;
+		case 'd':
+			startIndex = (startIndex + points.size() - 1) % points.size();
+			break;
+		case 'w':
+			endIndex = (endIndex + 1) % points.size();
+			break;
+		case 's':
+			endIndex = (endIndex + points.size() - 1) % points.size();
+			break;
+		}
+
+		if (c == 'c')
+			calc();
+	}
+
+	void calc(){
+		int adjacentVertex = (startIndex + 1) % points.size();
+		Funnel f = Funnel(startIndex, adjacentVertex);
+		std::vector<int> triangles = divideAndConquerTriangulate(points.data(), points.size());
+		Path(f, triangles, startIndex, endIndex);
+	}
+
+	void Path(Funnel f, const std::vector<int> & tris, int start, int end){
+		int u = f.vertices[0];
+		int w = *(f.vertices.end() - 1);
+
+		int v = f.getTangent(end, points);
+
+		//splitting
+		Funnel f1 = Funnel::forward(f.vertices.begin(), v, end);
+		Funnel f2 = Funnel::back(f.vertices.rbegin(), v, end);
+
+		SP.clear();
+		SP.push_back(startIndex);
+		SP.push_back(v);
+		SP.push_back(endIndex);
+	}
+
+	int startIndex, endIndex;
+
+	std::vector<int> SP;
+};
 
 class MinBEPScene : public Scene {
 	void render(float delta){
@@ -121,7 +304,64 @@ class MinBEPScene : public Scene {
 		points.push_back(Input::mousePosition());
 	}
 
+	void onKey(char c){
+		if (c == 'r')
+			points.clear();
+	}
+
 	std::deque<vec2> points;
+};
+
+typedef vector<pair<int, int>> Graph;
+
+Graph getDualGraph(vector<int> & triangulation){
+	Graph resp;
+	if (triangulation.size() > 0){
+		int out[3];
+		for (int i = 0; i < triangulation.size() - 3; i += 3){
+			int a[3] = { triangulation[i], triangulation[i + 1], triangulation[i + 2] };
+			sort(a, a + 3);
+			for (int j = i + 3; j < triangulation.size(); j += 3){
+				int b[3] = { triangulation[j], triangulation[j + 1], triangulation[j + 2] };
+				sort(b, b + 3);
+				if (set_intersection(a, a + 3, b, b + 3, out) - out >= 2){
+					resp.push_back(pair<int, int>(i / 3, j / 3));
+				}
+			}
+		}
+	}
+	
+	return resp;
+}
+
+class MyScene : public EarClippingTriangulationScene {
+public:
+	void render(float delta){
+		EarClippingTriangulationScene::render(delta);
+
+		glBegin(GL_LINES);
+		glColor3f(0, 0, 1);
+		for (pair<int,int> edge : dualGraph){
+			vec2 a = getCenter(edge.first);
+			vec2 b = getCenter(edge.second);
+			glVertex2fv(a.data());
+			glVertex2fv(b.data());
+		}
+		glEnd();
+	}
+
+	vec2 getCenter(int triangleIndex){
+		triangleIndex *= 3;
+		return (points[triangles[triangleIndex]] + points[triangles[triangleIndex + 1]] + points[triangles[triangleIndex + 2]]) / 3.0f;
+	}
+
+	void onPointAdded(){
+		EarClippingTriangulationScene::onPointAdded();
+		dualGraph = getDualGraph(triangles);
+	}
+
+private:
+	Graph dualGraph;
 };
 
 int main(int argc, char **argv){
@@ -147,7 +387,8 @@ int main(int argc, char **argv){
 	glMatrixMode(GL_PROJECTION);
 	glOrtho(0, WINDOW_SIZE, 0, WINDOW_SIZE, -hSize, hSize);
 	glMatrixMode(GL_MODELVIEW);
-	s = new MinBEPScene();
+	//s = new S2();
+	s = new MyScene();
 	glutMainLoop();
 	return 0;
 }
