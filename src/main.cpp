@@ -10,7 +10,9 @@
 #include <deque>
 #include "../include/lista1.h"
 #include "../include/GeneralProblems.h"
+#include "../include/angel.h"
 #include <algorithm>
+#include <set>
 
 static Scene *s;
 static clock_t startT, endT;
@@ -312,10 +314,10 @@ class MinBEPScene : public Scene {
 	std::deque<vec2> points;
 };
 
-typedef vector<pair<int, int>> Graph;
+typedef vector<set<int>> Graph;
 
 Graph getDualGraph(vector<int> & triangulation){
-	Graph resp;
+	Graph resp(triangulation.size() / 3);
 	if (triangulation.size() > 0){
 		int out[3];
 		for (int i = 0; i < triangulation.size() - 3; i += 3){
@@ -325,7 +327,8 @@ Graph getDualGraph(vector<int> & triangulation){
 				int b[3] = { triangulation[j], triangulation[j + 1], triangulation[j + 2] };
 				sort(b, b + 3);
 				if (set_intersection(a, a + 3, b, b + 3, out) - out >= 2){
-					resp.push_back(pair<int, int>(i / 3, j / 3));
+					resp[i / 3].insert(j / 3);
+					resp[j / 3].insert(i / 3);
 				}
 			}
 		}
@@ -341,11 +344,14 @@ public:
 
 		glBegin(GL_LINES);
 		glColor3f(0, 0, 1);
-		for (pair<int,int> edge : dualGraph){
-			vec2 a = getCenter(edge.first);
-			vec2 b = getCenter(edge.second);
-			glVertex2fv(a.data());
-			glVertex2fv(b.data());
+		for (int i = 0; i < dualGraph.size(); i++){
+			for (int j : dualGraph[i]){
+				vec2 a = getCenter(i);
+				vec2 b = getCenter(j);
+				glVertex2fv(a.data());
+				glVertex2fv(b.data());
+			}
+			
 		}
 		glEnd();
 	}
