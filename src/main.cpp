@@ -13,6 +13,7 @@
 #include "../include/angel.h"
 #include <algorithm>
 #include <set>
+#include <stack>
 
 static Scene *s;
 static clock_t startT, endT;
@@ -38,6 +39,16 @@ void idle(){
 }
 
 void onKeyboard(unsigned char c, int x, int y){
+	Input::addKey(c);
+	const unsigned char ESC = 27;
+	if (c == ESC)
+		exit(0);
+	else
+		s->onKey(c);
+}
+
+void onKeyboardUp(unsigned char c, int x, int y){
+	Input::removeKey(c);
 	const unsigned char ESC = 27;
 	if (c == ESC)
 		exit(0);
@@ -316,6 +327,54 @@ class MinBEPScene : public Scene {
 
 typedef vector<set<int>> Graph;
 
+int findTriangle(vec2 v, vec2* points, vector<int> & triangles){
+	int i;
+	for (i = 0; i < triangles.size() / 3; i++){
+		vector<int>::iterator start = triangles.begin() + i * 3;
+		TriangleLocalization loc = findInTriangle(v,	points[start[0]], points[start[1]], points[start[2]]);
+		if (loc == INSIDE)
+			return i;
+	}
+	return -1;
+}
+
+vector<int> DepthFirstSearch(vec2 src, vec2 target, vec2* points, Graph & g, vector<int> & triangles){
+	//find first triangle
+	vector<int> resp;
+	int srcTriangle = findTriangle(src, points, triangles);
+	int destTriangle = findTriangle(target, points, triangles);
+	
+	if (destTriangle == srcTriangle){
+		resp.push_back(srcTriangle);
+	}
+	else{
+		set<int> visited;
+		stack<pair<int, vector<int>>> toVisit;
+		toVisit.push(pair<int, vector<int>>(srcTriangle, vector<int>()));
+		while (toVisit.size() > 0){
+			pair<int, vector<int>> p = toVisit.top();
+			int t = p.first;
+
+			if (t == destTriangle){
+				resp = p.second;
+				resp.push_back(t);
+				break;
+			}
+
+			toVisit.pop();
+			vector<int> newPath = p.second;
+			newPath.push_back(t);
+			for (int dest : g[t]){
+				if (visited.find(dest) == visited.end()){
+					toVisit.push(pair<int, vector<int>>(dest, newPath));
+				}
+			}
+			visited.insert(t);
+		}
+	}
+	return resp;
+}
+
 Graph getDualGraph(vector<int> & triangulation){
 	Graph resp(triangulation.size() / 3);
 	if (triangulation.size() > 0){
@@ -351,9 +410,24 @@ public:
 				glVertex2fv(a.data());
 				glVertex2fv(b.data());
 			}
-			
 		}
 		glEnd();
+
+		if (testPoints.size() >= 2){
+			glBegin(GL_POINTS);
+			glColor3f(0, 1, 0);
+			glVertex2fv(testPoints[0].data());
+			glVertex2fv(testPoints[1].data());
+			glEnd();
+
+			vector<int> path = DepthFirstSearch(testPoints[0], testPoints[1], points.data(), dualGraph, triangles);
+			glBegin(GL_LINE_STRIP);
+			for (int t : path){
+				glVertex2fv(getCenter(t).data());
+			}
+			glEnd();
+		}
+		
 	}
 
 	vec2 getCenter(int triangleIndex){
@@ -366,8 +440,20 @@ public:
 		dualGraph = getDualGraph(triangles);
 	}
 
+	void onMouseDown(){
+		
+		if (Input::checkKey('d')){
+			testPoints.push_back(Input::mousePosition());
+			printf("add\n");
+		}
+		else {
+			EarClippingTriangulationScene::onMouseDown();
+		}
+	}
+
 private:
 	Graph dualGraph;
+	vector<vec2> testPoints;
 };
 
 int main(int argc, char **argv){
@@ -383,6 +469,7 @@ int main(int argc, char **argv){
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
 	glutKeyboardFunc(onKeyboard);
+	glutKeyboardUpFunc(onKeyboardUp);
 	glutPassiveMotionFunc(onMouseMove);
 	glutMouseFunc(onMouse);
 
