@@ -166,7 +166,22 @@ void ClosestPairScene::onKey(char c){
 DivideAndConquerTriangulationScene::DivideAndConquerTriangulationScene() : InteractiveScene(400){	}
 
 void DivideAndConquerTriangulationScene::render(float delta){
-	InteractiveScene::render(delta);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (points.size() > 2){
+		glBegin(GL_TRIANGLES);
+		glColor3f(1, 1, 1);
+		for (int i = 0; i < triangles.size(); i++)
+			glVertex2fv(points[triangles[i]].data());
+		glEnd();
+	}
+	else {
+		glBegin(getDrawPrimitive());
+		glColor3f(1, 0, 0);
+		for (vec2 p : points)
+			glVertex2fv(p.data());
+		glEnd();
+	}
+	
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -175,13 +190,12 @@ void DivideAndConquerTriangulationScene::render(float delta){
 	for (int i = 0; i < triangles.size(); i++)
 		glVertex2fv(points[triangles[i]].data());
 	glEnd();
-
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 GLenum DivideAndConquerTriangulationScene::getDrawPrimitive(){
 	int pointCount = points.size();
-	return pointCount > 2 ? GL_POLYGON : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
+	return pointCount > 2 ? GL_TRIANGLES : pointCount > 1 ? GL_LINE_STRIP : GL_POINTS;
 }
 
 void DivideAndConquerTriangulationScene::onPointAdded(){
@@ -192,7 +206,8 @@ void DivideAndConquerTriangulationScene::onPointAdded(){
 EarClippingTriangulationScene::EarClippingTriangulationScene() : DivideAndConquerTriangulationScene(){	}
 
 void EarClippingTriangulationScene::onPointAdded(){
-	triangles = earClippingTriangulate(points.data(), points.size());
+	//triangles = earClippingTriangulate(points.data(), points.size());
+	triangles = divideAndConquerTriangulate(points.data(), points.size());
 }
 
 
