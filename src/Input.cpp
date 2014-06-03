@@ -18,7 +18,7 @@ void Input::addKey(char c){
 }
 
 void Input::removeKey(char c){
-	pressedKeys.erase(pressedKeys.find(c));
+	pressedKeys.erase(c);
 }
 
 bool Input::checkKey(char c){

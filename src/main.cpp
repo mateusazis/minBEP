@@ -338,6 +338,12 @@ int findTriangle(vec2 v, vec2* points, vector<int> & triangles){
 	return -1;
 }
 
+static void pushPath(int src, int dest, const int *parent, vector<int> & out){
+	if (src != dest)
+		pushPath(src, parent[dest], parent, out);
+	out.push_back(dest);
+}
+
 vector<int> DepthFirstSearch(vec2 src, vec2 target, vec2* points, Graph & g, vector<int> & triangles){
 	//find first triangle
 	vector<int> resp;
@@ -349,28 +355,28 @@ vector<int> DepthFirstSearch(vec2 src, vec2 target, vec2* points, Graph & g, vec
 	}
 	else{
 		set<int> visited;
-		stack<pair<int, vector<int>>> toVisit;
-		toVisit.push(pair<int, vector<int>>(srcTriangle, vector<int>()));
-		while (toVisit.size() > 0){
-			pair<int, vector<int>> p = toVisit.top();
-			int t = p.first;
+		stack<int> toVisit;
+		toVisit.push(srcTriangle);
 
-			if (t == destTriangle){
-				resp = p.second;
-				resp.push_back(t);
-				break;
-			}
+		int triCount = triangles.size() / 3;
+		int *parent = new int[triCount];
+		std::fill_n(parent, triCount, -1);
+		int t;
 
+		while (toVisit.size() > 0 && (t = toVisit.top()) != destTriangle){
 			toVisit.pop();
-			vector<int> newPath = p.second;
-			newPath.push_back(t);
-			for (int dest : g[t]){
-				if (visited.find(dest) == visited.end()){
-					toVisit.push(pair<int, vector<int>>(dest, newPath));
-				}
+
+			for (int dest : g[t])
+			if (visited.find(dest) == visited.end()){
+				parent[dest] = t;
+				toVisit.push(dest);
 			}
+				
 			visited.insert(t);
 		}
+
+		pushPath(srcTriangle, destTriangle, parent, resp);
+		delete parent;
 	}
 	return resp;
 }
