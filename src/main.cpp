@@ -430,8 +430,8 @@ static Diagonal getSharedVertices(const int* triA, const int* triB){
 
 int getDifferentVertex(Diagonal d, int* triangle){
 	for (int i = 0; i < 3; i++)
-	if (triangle[i] != d.a && triangle[i] != d.b)
-		return triangle[i];
+		if (triangle[i] != d.a && triangle[i] != d.b)
+			return triangle[i];
 	return -1;
 }
 
@@ -465,10 +465,15 @@ int getDifferentVertex(Diagonal d, int* triangle){
 //	return -1;
 //}
 
-bool isPredecessor(vec2 candidate, vec2 previous, vec2 v){
-	vec2 delta1 = v - candidate;
-	vec2 delta2 = candidate - previous;
-	return delta2.crossSign(delta1) >= 0;
+bool isPredecessor(vec2 candidate, vec2 next, vec2 v, bool pastApex){
+	vec2 delta = v - candidate, baseSegment;
+	if (pastApex)
+		baseSegment = next - candidate;
+	else
+		baseSegment = candidate - next;
+	float cross = baseSegment.crossSign(delta);
+	printf("Cross is %f\n", cross);
+	return cross >= 0;
 }
 
 //bool split(deque<int> & funnel, Diagonal d, int apexIndex, int count, vector<int> & tree, int currentTriangle, 
@@ -504,7 +509,34 @@ bool isPredecessor(vec2 candidate, vec2 previous, vec2 v){
 //	return false;
 //}
 
-vector<int> SP(vec2 src, vec2 dest, vec2* points, int count){
+static void printFunnel(deque<int> & f){
+	printf("[");
+	for (int i = 0; i < f.size(); i++){
+		printf("%d", f[i]);
+		if (i < f.size() - 1)
+			printf(", ");
+	}
+	printf("]\n");
+}
+
+static deque<int> makeFirstFunnel(vec2 src, vec2* points, int indexA, int indexB){
+	vec2 diffA = points[indexA] - src;
+	vec2 diffB = points[indexB] - src;
+	deque<int> resp;
+	if (diffA.crossSign(diffB) >= 0){
+		resp.push_back(indexB);
+		resp.push_back(-1);
+		resp.push_back(indexA);
+	}
+	else {
+		resp.push_back(indexA);
+		resp.push_back(-1);
+		resp.push_back(indexB);
+	}
+	return resp;
+}
+
+vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> & funnels){
 	vector<int> triangles = divideAndConquerTriangulate(points, count);
 	Graph g = getDualGraph(triangles);
 	vector<int> tree = DepthFirstSearch(src, dest, points, g, triangles);
@@ -512,44 +544,64 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count){
 	
 
 	vector<int> resp;
-	deque<int> funnel;
+	
 	if (tree.size() != 1){
+		
 		int* preds = new int[count];
 		std::fill_n(preds, count, -1);
 		int nextVertex = -1;
 
 		Diagonal d = getSharedVertices(triangles.data() + tree[0] * 3, triangles.data() + tree[1] * 3);
-		funnel.push_back(d.b);
-		funnel.push_back(-1); //appex, CUSP
-		funnel.push_back(d.a);
+		deque<int> funnel = makeFirstFunnel(src, points, d.a, d.b);
 		//int apexIndex = 1;
 		int apex = -1;
 		
-		for (int i = 1; i <= tree.size() - 1; i++){
-			nextVertex = getDifferentVertex(d, triangles.data() + tree[i] * 3);
+		for (int i = 1; i < tree.size(); i++){
+			funnels.push_back(funnel);
+			printf("========== TRIANGLE %d =========\n", i);
+			printFunnel(funnel);
+			vec2 nextPoint;
+			if (i == tree.size() - 1){
+				nextPoint = dest;
+			}
+			else {
+				nextVertex = getDifferentVertex(d, triangles.data() + tree[i] * 3);
+				nextPoint = points[nextVertex];
+			}
+			
 			int head = funnel[0];
 			vec2 headPoint = head == -1 ? src : points[head];
-			vec2 nextPoint = funnel[1] == -1 ? src : points[funnel[1]];
+			vec2 nextFunnelPoint = funnel[1] == -1 ? src : points[funnel[1]];
 			
 			bool popedApex = false;
 
-			while (!isPredecessor(headPoint, nextPoint, points[nextVertex])){
+			printf("Testing %d as head for %d\n", head, nextVertex);
+			while (!isPredecessor(headPoint, nextFunnelPoint, nextPoint, popedApex || head == apex)){
 				if (head == apex)
 					popedApex = true;
 				
 				funnel.erase(funnel.begin());
 				head = funnel[0];
 				headPoint = head == -1 ? src : points[head];
+				nextFunnelPoint = funnel[1] == -1 ? src : points[funnel[1]];
+				printf("Testing %d as head for %d\n", head, nextVertex);
 			}
+			printf("chose head as %d\n", head);
 
-			
-			preds[nextVertex] = head;
-			if (popedApex)
-				apex = head;
-			funnel.push_front(nextVertex);
+			if (i != tree.size() - 1){
+				printf("set pred of %d to %d\n", nextVertex, head);
+				preds[nextVertex] = head;
+				if (popedApex)
+					apex = head;
+				printf("Pushing left vertex %d\n", nextVertex);
+				funnel.push_front(nextVertex);
+			} else
+				nextVertex = head;
 		}
 
-		nextVertex = preds[nextVertex];
+		funnels.push_back(funnel);
+
+		//nextVertex = preds[nextVertex];
 		while (nextVertex != -1){
 			printf("pushing vertex %d\n", nextVertex);
 			resp.insert(resp.begin(), nextVertex);
@@ -583,12 +635,14 @@ public:
 		glEnd();
 
 		if (testPoints.size() >= 2){
+			
 			glBegin(GL_POINTS);
 			glColor3f(0, 1, 0);
 			glVertex2fv(testPoints[0].data());
 			glVertex2fv(testPoints[1].data());
 			glEnd();
 
+			//Draw graph
 			vector<int> path = DepthFirstSearch(testPoints[0], testPoints[1], points.data(), dualGraph, triangles);
 			glBegin(GL_LINE_STRIP);
 			for (int t : path){
@@ -596,17 +650,50 @@ public:
 			}
 			glEnd();
 
-
+			//Draw path
+			glLineStipple(1, 0xAAAA);
+			glEnable(GL_LINE_STIPPLE);
 			glBegin(GL_LINE_STRIP);
-			glColor3f(.5f, .5f, .5f);
+			glColor3f(0, 0, 0);
 			glVertex2fv(testPoints[0].data());
 			for (int i : sp)
 				glVertex2fv(points[i].data());
 			glVertex2fv(testPoints[1].data());
 			glEnd();
+			glDisable(GL_LINE_STIPPLE);
 		}
 
-		
+		//draw funnels
+		if (funnels.size() > 0){
+			glBegin(GL_LINE_STRIP);
+			glColor3f(.3f, .2f, 1);
+			for (int i : funnels[currFunnel]){
+				vec2 v;
+				if (i == -1)
+					v = testPoints[0];
+				else
+					v = points[i];
+				glVertex2fv(v.data());
+			}
+			glEnd();
+			
+		}
+
+		//DRAW TRIANGLE NUMBERS
+		char temp1[3];
+		glColor3f(0, 1, 0);
+		for (int i = 0; i < points.size(); i++){
+			glRasterPos2fv(points[i].data());
+			itoa(i, temp1, 10);
+			glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)temp1);
+		}
+
+		if (testPoints.size() > 1){
+			glRasterPos2fv(testPoints[0].data());
+			glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)"-1");
+			glRasterPos2fv(testPoints[1].data());
+			glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)"Dest");
+		}
 
 		
 	}
@@ -620,9 +707,26 @@ public:
 		EarClippingTriangulationScene::onPointAdded();
 		dualGraph = getDualGraph(triangles);
 		if (testPoints.size() >= 2){
-			sp = SP(testPoints[0], testPoints[1], points.data(), points.size());
+			system("cls");
+			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
 		}
 		
+	}
+
+	void onKey(char c){
+		EarClippingTriangulationScene::onKey(c);
+		if (c == 'r'){
+			points.clear();
+			testPoints.clear();
+			dualGraph.clear();
+			triangles.clear();
+			funnels.clear();
+			currFunnel = 0;
+		}
+		if (c == '+')
+			currFunnel = std::min<int>(currFunnel + 1, funnels.size() - 1);
+		if (c == '-')
+			currFunnel = max<int>(currFunnel - 1, 0);
 	}
 
 	void onMouseDown(){
@@ -631,7 +735,8 @@ public:
 			testPoints.push_back(Input::mousePosition());
 			printf("add\n");
 			if (testPoints.size() >= 2){
-				sp = SP(testPoints[0], testPoints[1], points.data(), points.size());
+				system("cls");
+				sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
 			}
 		}
 		else {
@@ -643,6 +748,8 @@ private:
 	Graph dualGraph;
 	vector<vec2> testPoints;
 	vector<int> sp;
+	deque<deque<int>> funnels;
+	int currFunnel = 0;
 };
 
 int main(int argc, char **argv){
