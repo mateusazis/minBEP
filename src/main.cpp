@@ -409,8 +409,8 @@ Graph getDualGraph(vector<int> & triangulation){
 
 class Diagonal : private pair<int, int> {
 public:
-	Diagonal(int a, int b) : pair<int, int>(a, b), a(a), b(b){}
-	const int &a, &b;
+	Diagonal(int first, int second) : pair<int, int>(first, second), a(first), b(second){}
+	int a, b;
 };
 
 static Diagonal getSharedVertices(const int* triA, const int* triB){
@@ -435,84 +435,127 @@ int getDifferentVertex(Diagonal d, int* triangle){
 	return -1;
 }
 
-int findPredecessor(int v, vec2* points, deque<int> & funnel, int apexIndex){
-	for (deque<int>::iterator it = funnel.begin() + 1; it < funnel.end() - 1; it++){
-		int index = *it;
-		vec2 previous = points[funnel[it[-1]]];
-		vec2 center   = points[funnel[it[ 0]]];
-		vec2 next     = points[funnel[it[ 1]]];
+//int findPredecessor(int v, vec2* points, deque<int> & funnel, int apexIndex){
+//	for (deque<int>::iterator it = funnel.begin() + 1; it < funnel.end() - 1; it++){
+//		int index = *it;
+//		vec2 previous = points[funnel[it[-1]]];
+//		vec2 center   = points[funnel[it[ 0]]];
+//		vec2 next     = points[funnel[it[ 1]]];
+//
+//		vec2 delta = points[v] - center;
+//		vec2 v1, v2;
+//		int funnelIndex = it - funnel.begin();
+//		if (funnelIndex < apexIndex){ //LEFT
+//			v1 = center - next;
+//			v2 = previous - center;
+//		}
+//		else if (funnelIndex == apexIndex){
+//			v1 = next - center;
+//			v2 = previous - center;
+//		}
+//		else {
+//			v1 = center - previous;
+//			v2 = next - center;
+//		}
+//		
+//
+//		if (getConvexity(v1, v2, delta) == NAO)
+//			return funnelIndex;
+//	}
+//	return -1;
+//}
 
-		vec2 delta = points[v] - center;
-		vec2 v1, v2;
-		int funnelIndex = it - funnel.begin();
-		if (funnelIndex < apexIndex){ //LEFT
-			v1 = center - next;
-			v2 = previous - center;
-		}
-		else if (funnelIndex == apexIndex){
-			v1 = next - center;
-			v2 = previous - center;
-		}
-		else {
-			v1 = center - previous;
-			v2 = next - center;
-		}
-		
-
-		if (getConvexity(v1, v2, delta) == NAO)
-			return funnelIndex;
-	}
-	return -1;
+bool isPredecessor(vec2 candidate, vec2 previous, vec2 v){
+	vec2 delta1 = v - candidate;
+	vec2 delta2 = candidate - previous;
+	return delta2.crossSign(delta1) >= 0;
 }
 
-bool split(deque<int> & funnel, Diagonal d, int apexIndex, int count, vector<int> & tree, int currentTriangle, 
-	vector<int> & triangles, vec2* points, int targetTriangle){
-	int alpha = d.a, beta = d.b;
-	bool isEdge = abs(alpha - beta) == 1 || 
-		((alpha == 0 && beta == count - 1) || 
-		(alpha == count - 1 && beta == 0));
-	if (!isEdge){
-		int v = getDifferentVertex(Diagonal(alpha, beta), triangles.data() + tree[currentTriangle + 1] * 3);
-		Diagonal d1(alpha, v);
-		Diagonal d2(beta, v);
-		int t = findPredecessor(v, points, funnel, apexIndex); //achar setor de v
-		deque<int> prefix(funnel.begin(), funnel.begin() + t + 1);
-		deque<int> suffix(funnel.begin() + t, funnel.end());
-		prefix.push_back(v);
-		suffix.push_front(v);
-		if (targetTriangle = currentTriangle + 1){
-			if (t < apexIndex)
-				funnel = prefix;
-			else
-				funnel = suffix;
-			return true;
-		}
-		else {
-			funnel = prefix;
-			if (split(funnel, d1, funnel.size() - 1, count, tree, currentTriangle + 1, triangles, points, targetTriangle))
-				return true;
-			funnel = suffix;
-			return split(funnel, d2, apexIndex, count, tree, currentTriangle + 1, triangles, points, targetTriangle))
-		}
-	}
-	return false;
-}
+//bool split(deque<int> & funnel, Diagonal d, int apexIndex, int count, vector<int> & tree, int currentTriangle, 
+//	vector<int> & triangles, vec2* points, int targetTriangle){
+//	int alpha = d.a, beta = d.b;
+//	bool isEdge = abs(alpha - beta) == 1 || 
+//		((alpha == 0 && beta == count - 1) || 
+//		(alpha == count - 1 && beta == 0));
+//	if (!isEdge){
+//		int v = getDifferentVertex(Diagonal(alpha, beta), triangles.data() + tree[currentTriangle + 1] * 3);
+//		Diagonal d1(alpha, v);
+//		Diagonal d2(beta, v);
+//		int t = findPredecessor(v, points, funnel, apexIndex); //achar setor de v
+//		deque<int> prefix(funnel.begin(), funnel.begin() + t + 1);
+//		deque<int> suffix(funnel.begin() + t, funnel.end());
+//		prefix.push_back(v);
+//		suffix.push_front(v);
+//		if (targetTriangle = currentTriangle + 1){
+//			if (t < apexIndex)
+//				funnel = prefix;
+//			else
+//				funnel = suffix;
+//			return true;
+//		}
+//		else {
+//			funnel = prefix;
+//			if (split(funnel, d1, funnel.size() - 1, count, tree, currentTriangle + 1, triangles, points, targetTriangle))
+//				return true;
+//			funnel = suffix;
+//			return split(funnel, d2, apexIndex, count, tree, currentTriangle + 1, triangles, points, targetTriangle))
+//		}
+//	}
+//	return false;
+//}
 
 vector<int> SP(vec2 src, vec2 dest, vec2* points, int count){
 	vector<int> triangles = divideAndConquerTriangulate(points, count);
 	Graph g = getDualGraph(triangles);
 	vector<int> tree = DepthFirstSearch(src, dest, points, g, triangles);
 
+	
+
 	vector<int> resp;
 	deque<int> funnel;
 	if (tree.size() != 1){
+		int* preds = new int[count];
+		std::fill_n(preds, count, -1);
+		int nextVertex = -1;
+
 		Diagonal d = getSharedVertices(triangles.data() + tree[0] * 3, triangles.data() + tree[1] * 3);
-		funnel.push_back(d.a);
-		funnel.push_back(-1); //appex, CUSP
 		funnel.push_back(d.b);
-		int apexIndex = 1;
-		funnel = split(funnel, d, apexIndex, count, tree, 0, triangles, points, tree.end()[-1]);
-		find()
+		funnel.push_back(-1); //appex, CUSP
+		funnel.push_back(d.a);
+		//int apexIndex = 1;
+		int apex = -1;
+		
+		for (int i = 1; i <= tree.size() - 1; i++){
+			nextVertex = getDifferentVertex(d, triangles.data() + tree[i] * 3);
+			int head = funnel[0];
+			vec2 headPoint = head == -1 ? src : points[head];
+			vec2 nextPoint = funnel[1] == -1 ? src : points[funnel[1]];
+			
+			bool popedApex = false;
+
+			while (!isPredecessor(headPoint, nextPoint, points[nextVertex])){
+				if (head == apex)
+					popedApex = true;
+				
+				funnel.erase(funnel.begin());
+				head = funnel[0];
+				headPoint = head == -1 ? src : points[head];
+			}
+
+			
+			preds[nextVertex] = head;
+			if (popedApex)
+				apex = head;
+			funnel.push_front(nextVertex);
+		}
+
+		nextVertex = preds[nextVertex];
+		while (nextVertex != -1){
+			printf("pushing vertex %d\n", nextVertex);
+			resp.insert(resp.begin(), nextVertex);
+			nextVertex = preds[nextVertex];
+		}
+		delete preds;
 	}
 	
 
@@ -524,6 +567,7 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count){
 class MyScene : public EarClippingTriangulationScene {
 public:
 	void render(float delta){
+		glLineWidth(3);
 		EarClippingTriangulationScene::render(delta);
 
 		glBegin(GL_LINES);
