@@ -555,9 +555,10 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 		deque<int> funnel = makeFirstFunnel(src, points, d.a, d.b);
 		//int apexIndex = 1;
 		int apex = -1;
-		
+		funnels.push_back(funnel);
 		for (int i = 1; i < tree.size(); i++){
-			funnels.push_back(funnel);
+			int headIndex = 0;
+			
 			printf("========== TRIANGLE %d =========\n", i);
 			printFunnel(funnel);
 			vec2 nextPoint;
@@ -569,9 +570,9 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 				nextPoint = points[nextVertex];
 			}
 			
-			int head = funnel[0];
+			int head = funnel[headIndex];
 			vec2 headPoint = head == -1 ? src : points[head];
-			vec2 nextFunnelPoint = funnel[1] == -1 ? src : points[funnel[1]];
+			vec2 nextFunnelPoint = funnel[headIndex + 1] == -1 ? src : points[funnel[headIndex + 1]];
 			
 			bool popedApex = false;
 
@@ -580,10 +581,14 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 				if (head == apex)
 					popedApex = true;
 				
-				funnel.erase(funnel.begin());
-				head = funnel[0];
+				//funnel.erase(funnel.begin());
+				headIndex++;
+				if (headIndex >= funnel.size() - 1)
+					break;
+
+				head = funnel[headIndex];
 				headPoint = head == -1 ? src : points[head];
-				nextFunnelPoint = funnel[1] == -1 ? src : points[funnel[1]];
+				nextFunnelPoint = funnel[headIndex + 1] == -1 ? src : points[funnel[headIndex + 1]];
 				printf("Testing %d as head for %d\n", head, nextVertex);
 			}
 			printf("chose head as %d\n", head);
@@ -594,12 +599,19 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 				if (popedApex)
 					apex = head;
 				printf("Pushing left vertex %d\n", nextVertex);
-				funnel.push_front(nextVertex);
+				if (headIndex == 0){
+					funnel.push_front(nextVertex);
+					funnels.push_back(funnel);
+				}
+				else if (headIndex == funnel.size() - 1){
+					funnel.push_back(nextVertex);
+					funnels.push_back(funnel);
+				}
 			} else
 				nextVertex = head;
 		}
 
-		funnels.push_back(funnel);
+		
 
 		//nextVertex = preds[nextVertex];
 		while (nextVertex != -1){
