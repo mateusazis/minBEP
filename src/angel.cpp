@@ -26,6 +26,13 @@ float & vec2::y(){
 	return v[1];
 }
 
+const float & vec2::x() const{
+	return v[0];
+}
+const float & vec2::y() const {
+	return v[1];
+}
+
 const float* vec2::data(){
 	return v;
 }

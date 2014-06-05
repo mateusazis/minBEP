@@ -219,13 +219,13 @@ static deque<int> makeFirstFunnel(vec2 src, vec2* points, int indexA, int indexB
 	return resp;
 }
 
-vec2 getFunnelPoint(vec2 src, vec2* points, deque<int> & funnel, int index){
+vec2 getFunnelPoint(vec2 src, const vec2* points, deque<int> & funnel, int index){
 	if (funnel[index] == -1)
 		return src;
 	return points[funnel[index]];
 }
 
-static int findPredecessor(deque<int> & funnel, int apex, vec2* points, vec2 src, vec2 dest, int targetIndex, int & relativePos){
+static int findPredecessor(deque<int> & funnel, int apex, const vec2* points, vec2 src, vec2 dest, int targetIndex, int & relativePos){
 	vec2 target = targetIndex == -2 ? dest : points[targetIndex];
 	int apexIndex = find(funnel.begin(), funnel.end(), apex) - funnel.begin();
 	for (int i = 0; i < apexIndex; i++){
@@ -303,21 +303,28 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 			int head = funnel[headIndex];
 
 			printf("chose head as %d\n", head);
+			/*if (relativePos == -1){
+				funnel.erase(funnel.begin(), funnel.begin() + headIndex);
+			}*/
 			//if (headIndex != 0){
 				//funnel.erase(funnel.begin(), funnel.begin() + headIndex);
 			//}
 
-			if (i != tree.size() - 1){
+			if (!lastTriangle){
 				printf("set pred of %d to %d\n", nextVertex, head);
 				preds[nextVertex] = head;
 				if (popedApex)
 					apex = head;
-				printf("Pushing left vertex %d\n", nextVertex);
-				if (headIndex == 0){
+				
+				if (relativePos <= 0){
+					funnel.erase(funnel.begin(), funnel.begin() + headIndex);
+					printf("Pushing left vertex %d\n", nextVertex);
 					funnel.push_front(nextVertex);
 					funnels.push_back(funnel);
 				}
-				else if (headIndex == funnel.size() - 1){
+				else if (relativePos > 0){
+					funnel.erase(funnel.begin() + headIndex, funnel.end());
+					printf("Pushing right vertex %d\n", nextVertex);
 					funnel.push_back(nextVertex);
 					funnels.push_back(funnel);
 				}
