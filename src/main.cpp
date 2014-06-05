@@ -219,9 +219,48 @@ static deque<int> makeFirstFunnel(vec2 src, vec2* points, int indexA, int indexB
 	return resp;
 }
 
-//static int findPredecessor(deque<int> & funnel, int apexIndex, vec2* points, vec2 dest, int vertexIndex){
-//	vec2 
-//}
+vec2 getFunnelPoint(vec2 src, vec2* points, deque<int> & funnel, int index){
+	if (funnel[index] == -1)
+		return src;
+	return points[funnel[index]];
+}
+
+static int findPredecessor(deque<int> & funnel, int apex, vec2* points, vec2 src, vec2 dest, int targetIndex, int & relativePos){
+	vec2 target = targetIndex == -2 ? dest : points[targetIndex];
+	int apexIndex = find(funnel.begin(), funnel.end(), apex) - funnel.begin();
+	for (int i = 0; i < apexIndex; i++){
+		vec2 a = getFunnelPoint(src, points, funnel, i);
+		vec2 b = getFunnelPoint(src, points, funnel, i+1);
+		printf("Testing %d as head for %d\n", funnel[i], targetIndex);
+		if (isPredecessor(a, b, target, false)){
+			relativePos = -1;
+			return i;
+		}
+	}
+
+	{
+		vec2 a = getFunnelPoint(src, points, funnel, apexIndex);
+		vec2 b = getFunnelPoint(src, points, funnel, apexIndex + 1);
+		printf("Testing %d as head for %d\n", funnel[apexIndex], targetIndex);
+		if (isPredecessor(a, b, target, true)){
+			relativePos = 0;
+			return apexIndex;
+		}
+	}
+	
+	for (int i = apexIndex + 1; i < funnel.size() - 1; i--){
+		printf("Testing %d as head for %d\n", funnel[i], targetIndex);
+		vec2 a = getFunnelPoint(src, points, funnel, i);
+		vec2 b = getFunnelPoint(src, points, funnel, i + 1);
+		if (isPredecessor(a, b, target, true)){
+			relativePos = 1;
+			return i;
+		}
+	}
+
+	relativePos = 1;
+	return funnel.size() - 1;
+}
 
 vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> & funnels){
 	vector<int> triangles = divideAndConquerTriangulate(points, count);
@@ -245,44 +284,27 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 		int apex = -1;
 		funnels.push_back(funnel);
 		for (int i = 1; i < tree.size(); i++){
-			int headIndex = 0;
 			
 			printf("========== TRIANGLE %d =========\n", i);
 			printFunnel(funnel);
-			vec2 nextPoint;
 			bool lastTriangle = i == tree.size() - 1;
 			if (lastTriangle){
-				nextPoint = dest;
+				nextVertex = -2;
 			}
 			else {
 				nextVertex = getDifferentVertex(d, triangles.data() + tree[i] * 3);
-				nextPoint = points[nextVertex];
 			}
-			
-			int head = funnel[headIndex];
-			vec2 headPoint = head == -1 ? src : points[head];
-			vec2 nextFunnelPoint = funnel[headIndex + 1] == -1 ? src : points[funnel[headIndex + 1]];
 			
 			bool popedApex = false;
 
-			printf("Testing %d as head for %d\n", head, lastTriangle ? -2 : nextVertex);
-			while (!isPredecessor(headPoint, nextFunnelPoint, nextPoint, popedApex || head == apex)){
-				if (head == apex)
-					popedApex = true;
-				
-				//funnel.erase(funnel.begin());
-				headIndex++;
-				if (headIndex >= funnel.size() - 1)
-					break;
+			//printf("Testing %d as head for %d\n", head, lastTriangle ? -2 : nextVertex);
+			int relativePos;
+			int headIndex = findPredecessor(funnel, apex, points, src, dest, nextVertex, relativePos);
+			int head = funnel[headIndex];
 
-				head = funnel[headIndex];
-				headPoint = head == -1 ? src : points[head];
-				nextFunnelPoint = funnel[headIndex + 1] == -1 ? src : points[funnel[headIndex + 1]];
-				printf("Testing %d as head for %d\n", head, nextVertex);
-			}
 			printf("chose head as %d\n", head);
 			//if (headIndex != 0){
-				funnel.erase(funnel.begin(), funnel.begin() + headIndex);
+				//funnel.erase(funnel.begin(), funnel.begin() + headIndex);
 			//}
 
 			if (i != tree.size() - 1){
