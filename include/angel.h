@@ -10,6 +10,8 @@ public:
 	float magnitude();
 	float & x();
 	float & y();
+	const float & x() const;
+	const float & y() const;
 
 	const float* data();
 
