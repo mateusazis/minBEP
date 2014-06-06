@@ -9,6 +9,7 @@ public:
 	static void addKey(char c);
 	static void removeKey(char c);
 	static bool checkKey(char c);
+	static bool checkKeyDown(char c);
 
 private:
 	static vec2 mousePos;

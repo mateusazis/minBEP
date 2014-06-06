@@ -179,13 +179,13 @@ int getDifferentVertex(Diagonal d, int* triangle){
 
 bool isPredecessor(vec2 candidate, vec2 next, vec2 v, bool pastApex){
 	vec2 delta = v - candidate, baseSegment;
-	if (pastApex)
+	/*if (pastApex)
 		baseSegment = next - candidate;
-	else
+	else*/
 		baseSegment = candidate - next;
 	int cross = baseSegment.crossSign(delta);
 	printf("Cross is %d\n", cross);
-	return cross >= 0;
+	return cross == (pastApex ? -1 : 1);
 }
 
 static void printFunnel(deque<int> & f){
@@ -238,7 +238,7 @@ static int findPredecessor(deque<int> & funnel, int apex, const vec2* points, ve
 		}
 	}
 
-	{
+	/*{
 		vec2 a = getFunnelPoint(src, points, funnel, apexIndex);
 		vec2 b = getFunnelPoint(src, points, funnel, apexIndex + 1);
 		printf("Testing %d as head for %d\n", funnel[apexIndex], targetIndex);
@@ -246,20 +246,22 @@ static int findPredecessor(deque<int> & funnel, int apex, const vec2* points, ve
 			relativePos = 0;
 			return apexIndex;
 		}
-	}
+	}*/
 	
-	for (int i = apexIndex + 1; i < funnel.size() - 1; i--){
+	for (int i = funnel.size() - 1; i > apexIndex; i--){
 		printf("Testing %d as head for %d\n", funnel[i], targetIndex);
 		vec2 a = getFunnelPoint(src, points, funnel, i);
-		vec2 b = getFunnelPoint(src, points, funnel, i + 1);
+		vec2 b = getFunnelPoint(src, points, funnel, i - 1);
 		if (isPredecessor(a, b, target, true)){
 			relativePos = 1;
 			return i;
 		}
 	}
 
-	relativePos = 1;
-	return funnel.size() - 1;
+	/*relativePos = 1;
+	return funnel.size() - 1;*/
+	relativePos = 0;
+	return apexIndex;
 }
 
 vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> & funnels){
@@ -316,17 +318,37 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 				if (popedApex)
 					apex = head;
 				
-				if (relativePos <= 0){
+				/*funnel.erase(funnel.begin(), funnel.begin() + headIndex);
+				printf("Pushing left vertex %d\n", nextVertex);
+				funnel.push_front(nextVertex);
+				funnels.push_back(funnel);*/
+
+				if (relativePos < 0){
 					funnel.erase(funnel.begin(), funnel.begin() + headIndex);
 					printf("Pushing left vertex %d\n", nextVertex);
 					funnel.push_front(nextVertex);
 					funnels.push_back(funnel);
 				}
 				else if (relativePos > 0){
-					funnel.erase(funnel.begin() + headIndex, funnel.end());
+					funnel.erase(funnel.begin() + headIndex + 1, funnel.end());
 					printf("Pushing right vertex %d\n", nextVertex);
 					funnel.push_back(nextVertex);
 					funnels.push_back(funnel);
+				}
+				else { //head is the apex
+					printf("Next triangle is: %d, %d, %d\n", triangles[tree[i + 1] * 3], triangles[tree[i + 1] * 3 + 1], triangles[tree[i + 1] * 3 + 2]);
+					if (triangleContainsVertex(triangles.data() + tree[i + 1] * 3, funnel[0])){
+						printf("Triangle %d has vertex %d. Push to the end\n", i+1, funnel[0]);
+						funnel.erase(funnel.begin() + headIndex + 1, funnel.end());
+						funnel.push_back(nextVertex);
+						funnels.push_back(funnel);
+					}
+					else {
+						printf("Triangle %d has NOT vertex %d. Push to the begging\n", i + 1, funnel[0]);
+						funnel.erase(funnel.begin(), funnel.begin() + headIndex);
+						funnel.push_front(nextVertex);
+						funnels.push_back(funnel);
+					}
 				}
 			} else
 				nextVertex = head;
@@ -485,9 +507,9 @@ public:
 			funnels.clear();
 			currFunnel = 0;
 		}
-		if (c == '+')
+		if (Input::checkKeyDown('+'))
 			currFunnel = std::min<int>(currFunnel + 1, funnels.size() - 1);
-		if (c == '-')
+		if (Input::checkKeyDown('-'))
 			currFunnel = max<int>(currFunnel - 1, 0);
 	}
 
