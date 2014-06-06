@@ -305,23 +305,13 @@ vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> &
 			int head = funnel[headIndex];
 
 			printf("chose head as %d\n", head);
-			/*if (relativePos == -1){
-				funnel.erase(funnel.begin(), funnel.begin() + headIndex);
-			}*/
-			//if (headIndex != 0){
-				//funnel.erase(funnel.begin(), funnel.begin() + headIndex);
-			//}
+
 
 			if (!lastTriangle){
 				printf("set pred of %d to %d\n", nextVertex, head);
 				preds[nextVertex] = head;
 				if (popedApex)
 					apex = head;
-				
-				/*funnel.erase(funnel.begin(), funnel.begin() + headIndex);
-				printf("Pushing left vertex %d\n", nextVertex);
-				funnel.push_front(nextVertex);
-				funnels.push_back(funnel);*/
 
 				if (relativePos < 0){
 					funnel.erase(funnel.begin(), funnel.begin() + headIndex);
@@ -511,6 +501,29 @@ public:
 			currFunnel = std::min<int>(currFunnel + 1, funnels.size() - 1);
 		if (Input::checkKeyDown('-'))
 			currFunnel = max<int>(currFunnel - 1, 0);
+
+		if (Input::checkKeyDown('s'))
+			saveToFile();
+		if (Input::checkKeyDown('l'))
+			loadFromFile();
+	}
+
+	void saveToFile(){
+		FILE* f = fopen("points", "wb");
+		int size = points.size();
+		fwrite(&size, sizeof(int), 1, f);
+		fwrite(points.data(), sizeof(vec2), points.size(), f);
+		fclose(f);
+	}
+
+	void loadFromFile(){
+		FILE* f = fopen("points", "rb");
+		int count;
+		fread(&count, sizeof(int), 1, f);
+		points.resize(count);
+		fread(points.data(), sizeof(vec2), count, f);
+		fclose(f);
+		onPointAdded();
 	}
 
 	void onMouseDown(){
