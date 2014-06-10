@@ -9,7 +9,11 @@ enum Convexidade {ERRO, SIM, NAO};
 
 //Lista 1
 
-//Exercícios de Primitivas Geométricas - Questão 4
+/*Lista 1 - Exercícios de Primitivas Geométricas - Questão 4
+U: vetor 1
+V: vetor 2
+W: vetor que deve estar no meio de U e V
+*/
 Convexidade getConvexity(vec2 u, vec2 v, vec2 w);
 
 
