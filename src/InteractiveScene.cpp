@@ -1,7 +1,7 @@
 #include "../include/InteractiveScene.h"
 #include "../include/Input.h"
 
-InteractiveScene::InteractiveScene(int windowSize){
+InteractiveScene::InteractiveScene(){
 }
 
 void InteractiveScene::render(float delta){

@@ -163,7 +163,7 @@ void ClosestPairScene::onKey(char c){
 }
 
 
-DivideAndConquerTriangulationScene::DivideAndConquerTriangulationScene() : InteractiveScene(400){	}
+DivideAndConquerTriangulationScene::DivideAndConquerTriangulationScene() : InteractiveScene(){	}
 
 void DivideAndConquerTriangulationScene::render(float delta){
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -252,7 +252,7 @@ void IncrementalTriangulationScene::onPointAdded(){
 }
 
 
-ConvexPolygonScene::ConvexPolygonScene() : InteractiveScene(400), isConvex(true){	}
+ConvexPolygonScene::ConvexPolygonScene() : InteractiveScene(), isConvex(true){	}
 
 const GLfloat* ConvexPolygonScene::getDrawColor(){
 	return successColors[isConvex];
@@ -274,7 +274,7 @@ static const char triNames[3][20] {"Incremetal", "Divisão e conquista", "Ear cli
 MetricsScene::MetricsScene() : DivideAndConquerTriangulationScene(), funcIndex(0){
 	glPointSize(5);
 	funcs[0] = incrementalTriangulate;
-	funcs[1] = divideAndConquerTriangulate;
+	//funcs[1] = divideAndConquerTriangulate;
 	funcs[2] = earClippingTriangulate;
 }
 

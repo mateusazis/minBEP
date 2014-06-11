@@ -24,7 +24,7 @@ Convexidade getConvexity(vec2 u, vec2 v, vec2 w);
 bool convex(vec2* polygon, int pointCount);
 
 //Questão 2
-std::vector<int> divideAndConquerTriangulate(vec2 *points, int count);
+std::vector<int> divideAndConquerTriangulate(const vec2 *points, int count);
 
 //Questão 4
 std::vector<int> earClippingTriangulate(vec2 *points, int count);

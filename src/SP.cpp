@@ -9,12 +9,11 @@
 
 using namespace std;
 
-Diagonal::Diagonal(int first, int second) : a(first), b(second){}
-
-static int findTriangle(vec2 v, vec2* points, vector<int> & triangles){
+//PRIVATE METHDOS
+static int findTriangle(vec2 v, const vec2* points, const vector<int> & triangles){
 	int i;
 	for (i = 0; i < triangles.size() / 3; i++){
-		vector<int>::iterator start = triangles.begin() + i * 3;
+		vector<int>::const_iterator start = triangles.begin() + i * 3;
 		TriangleLocalization loc = findInTriangle(v, points[start[0]], points[start[1]], points[start[2]]);
 		if (loc == INSIDE)
 			return i;
@@ -26,66 +25,6 @@ static void pushPath(int src, int dest, const int *parent, vector<int> & out){
 	if (src != dest)
 		pushPath(src, parent[dest], parent, out);
 	out.push_back(dest);
-}
-
-vector<int> DepthFirstSearch(vec2 src, vec2 target, vec2* points, Graph & g, vector<int> & triangles){
-	//find first triangle
-	vector<int> resp;
-	int srcTriangle = findTriangle(src, points, triangles);
-	int destTriangle = findTriangle(target, points, triangles);
-
-	if (srcTriangle != -1 && destTriangle != -1){
-		if (destTriangle == srcTriangle)
-			resp.push_back(srcTriangle);
-		else{
-			set<int> visited;
-			stack<int> toVisit;
-			toVisit.push(srcTriangle);
-
-			size_t triCount = triangles.size() / 3;
-			int *parent = new int[triCount];
-			std::fill_n(parent, triCount, -1);
-			int t;
-
-			while (toVisit.size() > 0 && (t = toVisit.top()) != destTriangle){
-				toVisit.pop();
-
-				for (int dest : g[t])
-				if (visited.find(dest) == visited.end()){
-					parent[dest] = t;
-					toVisit.push(dest);
-				}
-
-				visited.insert(t);
-			}
-
-			pushPath(srcTriangle, destTriangle, parent, resp);
-			delete parent;
-		}
-	}
-
-	return resp;
-}
-
-Graph getDualGraph(vector<int> & triangulation){
-	Graph resp(triangulation.size() / 3);
-	if (triangulation.size() > 0){
-		int out[3];
-		for (int i = 0; i < triangulation.size() - 3; i += 3){
-			int a[3] = { triangulation[i], triangulation[i + 1], triangulation[i + 2] };
-			sort(a, a + 3);
-			for (int j = i + 3; j < triangulation.size(); j += 3){
-				int b[3] = { triangulation[j], triangulation[j + 1], triangulation[j + 2] };
-				sort(b, b + 3);
-				if (set_intersection(a, a + 3, b, b + 3, out) - out >= 2){
-					resp[i / 3].insert(j / 3);
-					resp[j / 3].insert(i / 3);
-				}
-			}
-		}
-	}
-
-	return resp;
 }
 
 static Diagonal getSharedVertices(const int* triA, const int* triB){
@@ -101,27 +40,24 @@ static Diagonal getSharedVertices(const int* triA, const int* triB){
 	return Diagonal(resp[0], resp[1]);
 }
 
-
-
-static int getDifferentVertex(Diagonal d, int* triangle){
+static int getDifferentVertex(Diagonal d, const int* triangle){
 	for (int i = 0; i < 3; i++)
 	if (triangle[i] != d.a && triangle[i] != d.b)
 		return triangle[i];
 	return -1;
 }
 
-
 static bool isPredecessor(vec2 candidate, vec2 next, vec2 v, int expectedSign){
 	vec2 delta = v - next, baseSegment = candidate - next;
 	int cross = baseSegment.crossSign(delta);
-	return cross == expectedSign;
+	return cross == expectedSign || cross == 0;
 }
 
-static bool triangleContainsVertex(int *triangle, int vertex){
+static bool triangleContainsVertex(const int *triangle, int vertex){
 	return std::find(triangle, triangle + 3, vertex) != triangle + 3;
 }
 
-static deque<int> makeFirstFunnel(vec2 src, vec2* points, int indexA, int indexB){
+static deque<int> makeFirstFunnel(vec2 src, const vec2* points, int indexA, int indexB){
 	vec2 diffA = points[indexA] - src;
 	vec2 diffB = points[indexB] - src;
 	deque<int> resp;
@@ -199,11 +135,75 @@ static int findPredecessor(deque<int> & funnel, int apex, const vec2* points, ve
 			pos = searchLeftForHead(src, target, apexIndex, points, funnel);
 	}
 
-	//fprintf(stderr, "No predecessor found!\n");
+	if (pos == -1)
+		fprintf(stderr, "No predecessor for %d found!\n", targetIndex);
 	return pos;
 }
 
-vector<int> SP(vec2 src, vec2 dest, vec2* points, int count, deque<deque<int>> & funnels){
+//PUBLIC METHODS
+Diagonal::Diagonal(int first, int second) : a(first), b(second){}
+
+vector<int> DepthFirstSearch(vec2 src, vec2 target, const vec2* points, const Graph & g, const vector<int> & triangles){
+	//find first triangle
+	vector<int> resp;
+	int srcTriangle = findTriangle(src, points, triangles);
+	int destTriangle = findTriangle(target, points, triangles);
+
+	if (srcTriangle != -1 && destTriangle != -1){
+		if (destTriangle == srcTriangle)
+			resp.push_back(srcTriangle);
+		else{
+			set<int> visited;
+			stack<int> toVisit;
+			toVisit.push(srcTriangle);
+
+			size_t triCount = triangles.size() / 3;
+			int *parent = new int[triCount];
+			std::fill_n(parent, triCount, -1);
+			int t;
+
+			while (toVisit.size() > 0 && (t = toVisit.top()) != destTriangle){
+				toVisit.pop();
+
+				for (int dest : g[t])
+				if (visited.find(dest) == visited.end()){
+					parent[dest] = t;
+					toVisit.push(dest);
+				}
+
+				visited.insert(t);
+			}
+
+			pushPath(srcTriangle, destTriangle, parent, resp);
+			delete parent;
+		}
+	}
+
+	return resp;
+}
+
+Graph getDualGraph(const vector<int> & triangulation){
+	Graph resp(triangulation.size() / 3);
+	if (triangulation.size() > 0){
+		int out[3];
+		for (int i = 0; i < triangulation.size() - 3; i += 3){
+			int a[3] = { triangulation[i], triangulation[i + 1], triangulation[i + 2] };
+			sort(a, a + 3);
+			for (int j = i + 3; j < triangulation.size(); j += 3){
+				int b[3] = { triangulation[j], triangulation[j + 1], triangulation[j + 2] };
+				sort(b, b + 3);
+				if (set_intersection(a, a + 3, b, b + 3, out) - out >= 2){
+					resp[i / 3].insert(j / 3);
+					resp[j / 3].insert(i / 3);
+				}
+			}
+		}
+	}
+
+	return resp;
+}
+
+vector<int> SP(vec2 src, vec2 dest, const vec2* points, int count, deque<deque<int>> & funnels){
 	vector<int> triangles = divideAndConquerTriangulate(points, count);
 	Graph g = getDualGraph(triangles);
 	vector<int> tree = DepthFirstSearch(src, dest, points, g, triangles);

@@ -11,7 +11,7 @@ Subclasses podem variar a forma como os pontos são desenhados.
 */
 class InteractiveScene : public Scene {
 public:
-	InteractiveScene(int windowSize);
+	InteractiveScene();
 	virtual void render(float delta);
 	void onMouseDown();
 	virtual void onKey(char c);

@@ -129,7 +129,7 @@ pair<int, int> findClosestPair(vec2 *points, int count){
 }
 
 //Lista 1 - Exercícios sobre Polígonos - Questão 2
-int findLowestY(vec2* points, vector<int> & polygon){
+int findLowestY(const vec2* points, const vector<int> & polygon){
 	int resp = 0;
 	float minY = points[polygon[0]].y();
 	for (int i = 1; i < polygon.size(); i++){
@@ -160,7 +160,7 @@ pair<float,float> basisChange(vec2 v, vec2 axis1, vec2 axis2){
 	return pair<float, float>(l1, l2);
 }
 
-void triangulate(vector<int> & resp, vec2* points, vector<int> polygon, int totalPointCount){
+void triangulate(vector<int> & resp, const vec2* points, vector<int> polygon, int totalPointCount){
 	int pointCount = polygon.size();
 	if (pointCount <= 3){
 		if (pointCount == 3){
@@ -234,7 +234,7 @@ void triangulate(vector<int> & resp, vec2* points, vector<int> polygon, int tota
 	}
 }
 
-vector<int> divideAndConquerTriangulate(vec2 *points, int count){
+vector<int> divideAndConquerTriangulate(const vec2 *points, int count){
 	vector<int> resp;
 
 	vector<int> indices;

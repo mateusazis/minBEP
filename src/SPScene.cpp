@@ -1,9 +1,10 @@
 #include "../include/SPScene.h"
 #include "../include/Input.h"
+#include "../include/Lista1.h"
 #include <algorithm>
 using namespace std;
 
-MyScene::MyScene() : EarClippingTriangulationScene(){
+MyScene::MyScene() : InteractiveScene(){
 	points.push_back(vec2(300, 300)); //0
 	points.push_back(vec2(200, 300)); //1
 	points.push_back(vec2(250, 250)); //2
@@ -11,29 +12,16 @@ MyScene::MyScene() : EarClippingTriangulationScene(){
 	points.push_back(vec2(220, 150)); //4
 	points.push_back(vec2(200, 100)); //5
 	points.push_back(vec2(300, 100)); //6
-
+	
 	int tris[] = { 0, 1, 2, 0, 2, 4, 2, 3, 4, 0, 4, 6, 4, 5, 6 };
 	for (int i : tris)
 		triangles.push_back(i);
 	dualGraph = getDualGraph(triangles);
 }
 
+//BEGIN DRAWING =============================================================================
+
 void MyScene::render(float delta){
-	glLineWidth(3);
-	EarClippingTriangulationScene::render(delta);
-
-	glBegin(GL_LINES);
-	glColor3f(0, 0, 1);
-	for (int i = 0; i < dualGraph.size(); i++){
-		for (int j : dualGraph[i]){
-			vec2 a = getCenter(i);
-			vec2 b = getCenter(j);
-			glVertex2fv(a.data());
-			glVertex2fv(b.data());
-		}
-	}
-	glEnd();
-
 	if (testPoints.size() >= 2){
 		if (Input::checkKey('t')){
 			testPoints[1] = Input::mousePosition();
@@ -41,43 +29,32 @@ void MyScene::render(float delta){
 			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
 			currFunnel = 0;
 		}
+	}
 
-		glBegin(GL_POINTS);
-		glColor3f(0, 1, 0);
+	glLineWidth(3);
+	drawPolygon();
+	drawGraph();
+	drawDFSTree();
+	drawFunnels();
+	drawVertexNumbers();
+	drawSP();
+}
+
+void MyScene::drawSP(){
+	if (testPoints.size() >= 2){
+		glBegin(GL_LINE_STRIP);
+		glColor3f(0.5f, 0.5f, 0.5f);
 		glVertex2fv(testPoints[0].data());
+		for (int i : sp)
+			glVertex2fv(points[i].data());
 		glVertex2fv(testPoints[1].data());
 		glEnd();
-
-		//Draw graph
-		vector<int> path = DepthFirstSearch(testPoints[0], testPoints[1], points.data(), dualGraph, triangles);
-		glBegin(GL_LINE_STRIP);
-		for (int t : path){
-			glVertex2fv(getCenter(t).data());
-		}
-		glEnd();
-
-
 	}
+}
 
-	//draw funnels
-	if (funnels.size() > 0){
-		glBegin(GL_LINE_STRIP);
-		glColor3f(.3f, .2f, 1);
-		for (int i : funnels[currFunnel]){
-			vec2 v;
-			if (i == -1)
-				v = testPoints[0];
-			else
-				v = points[i];
-			glVertex2fv(v.data());
-		}
-		glEnd();
-
-	}
-
-	//DRAW TRIANGLE NUMBERS
+void MyScene::drawVertexNumbers(){
 	char temp1[3];
-	glColor3f(0, 1, 0);
+	glColor3f(0, .75f, 0);
 	for (int i = 0; i < points.size(); i++){
 		glRasterPos2fv(points[i].data());
 		itoa(i, temp1, 10);
@@ -90,18 +67,79 @@ void MyScene::render(float delta){
 		glRasterPos2fv(testPoints[1].data());
 		glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)"Dest");
 	}
+}
 
-	if (testPoints.size() >= 2){
-		//Draw path
+void MyScene::drawPolygon(){
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (points.size() > 2){
+		glBegin(GL_TRIANGLES);
+		glColor3f(1, 1, 1);
+		for (int i = 0; i < triangles.size(); i++)
+			glVertex2fv(points[triangles[i]].data());
+		glEnd();
+	}
+	else {
+		glBegin(points.size() == 2 ? GL_LINE_STRIP : GL_POINTS);
+		glColor3f(1, 0, 0);
+		for (vec2 p : points)
+			glVertex2fv(p.data());
+		glEnd();
+	}
+
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	glBegin(GL_TRIANGLES);
+	glColor3f(1, 0, 0);
+	for (int i = 0; i < triangles.size(); i++)
+		glVertex2fv(points[triangles[i]].data());
+	glEnd();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+void MyScene::drawGraph(){
+	glBegin(GL_LINES);
+	glColor3f(0, 0, 1);
+	for (int i = 0; i < dualGraph.size(); i++){
+		for (int j : dualGraph[i]){
+			vec2 a = getCenter(i);
+			vec2 b = getCenter(j);
+			glVertex2fv(a.data());
+			glVertex2fv(b.data());
+		}
+	}
+	glEnd();
+}
+
+void MyScene::drawDFSTree(){
+	if (testPoints.size() > 1){
+		vector<int> path = DepthFirstSearch(testPoints[0], testPoints[1], points.data(), dualGraph, triangles);
+		glColor3f(0, 1, 0);
 		glBegin(GL_LINE_STRIP);
-		glColor3f(0.5f, 0.5f, 0.5f);
-		glVertex2fv(testPoints[0].data());
-		for (int i : sp)
-			glVertex2fv(points[i].data());
-		glVertex2fv(testPoints[1].data());
+		for (int t : path){
+			glVertex2fv(getCenter(t).data());
+		}
 		glEnd();
 	}
 }
+
+void MyScene::drawFunnels(){
+	if (funnels.size() > 0){
+		glBegin(GL_LINE_STRIP);
+		glColor3f(.3f, .2f, 1);
+		for (int i : funnels[currFunnel]){
+			vec2 v;
+			if (i == -1)
+				v = testPoints[0];
+			else
+				v = points[i];
+			glVertex2fv(v.data());
+		}
+		glEnd();
+	}
+}
+
+//END DRAWING =============================================================================
 
 vec2 MyScene::getCenter(int triangleIndex){
 	triangleIndex *= 3;
@@ -109,7 +147,7 @@ vec2 MyScene::getCenter(int triangleIndex){
 }
 
 void MyScene::onPointAdded(){
-	EarClippingTriangulationScene::onPointAdded();
+	triangles = divideAndConquerTriangulate(points.data(), points.size());
 	dualGraph = getDualGraph(triangles);
 	if (testPoints.size() >= 2){
 		sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
@@ -118,7 +156,6 @@ void MyScene::onPointAdded(){
 }
 
 void MyScene::onKey(char c){
-		EarClippingTriangulationScene::onKey(c);
 	if (c == 'r'){
 		points.clear();
 		testPoints.clear();
@@ -157,14 +194,11 @@ void MyScene::loadFromFile(){
 }
 
 void MyScene::onMouseDown(){
-
 	if (Input::checkKey('d')){
 		testPoints.push_back(Input::mousePosition());
 		if (testPoints.size() >= 2){
 			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
 		}
-	}
-	else {
-		EarClippingTriangulationScene::onMouseDown();
-	}
+	} else
+		InteractiveScene::onMouseDown();
 }

@@ -9,8 +9,8 @@ vec2 Input::mousePosition(){
 }
 
 void Input::updateMouse(int x, int y){
-	mousePos.x() = x;
-	mousePos.y() = y;
+	mousePos.x() = (float)x;
+	mousePos.y() = (float)y;
 }
 
 void Input::addKey(char c){

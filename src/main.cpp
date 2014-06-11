@@ -5,7 +5,6 @@
 
 #include <GL/freeglut.h>
 
-#include <cstdio>
 #include <ctime>
 #include <clocale>
 
@@ -17,7 +16,7 @@ const int WINDOW_SIZE = 400;
 
 using namespace std;
 
-/* Callbacks da Freeglut */
+/* INÍCIO - Callbacks da Freeglut */
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	s->render(timeDiff);
@@ -61,7 +60,7 @@ void onMouseMove(int x, int y){
 	int mouseY = WINDOW_SIZE - y;
 	Input::updateMouse(mouseX, mouseY);
 }
-
+/* FIM - Callbacks da Freeglut */
 
 int main(int argc, char **argv){
 	setlocale(LC_ALL, "Portuguese");
@@ -87,7 +86,6 @@ int main(int argc, char **argv){
 	glMatrixMode(GL_PROJECTION);
 	glOrtho(0, WINDOW_SIZE, 0, WINDOW_SIZE, -hSize, hSize);
 	glMatrixMode(GL_MODELVIEW);
-	//s = new S2();
 	s = new MyScene();
 	glutMainLoop();
 	return 0;
