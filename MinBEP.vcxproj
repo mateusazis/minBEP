@@ -72,8 +72,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\libs\freeglut-2.8.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\libs\freeglut-2.8.1\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\UFF\Mestrado\GC\code\MinBEP\dependencies\glui\include;D:\libs\freeglut-2.8.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\UFF\Mestrado\GC\code\MinBEP\dependencies\glui\lib\x64;D:\libs\freeglut-2.8.1\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -103,7 +103,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLUIDLL;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>

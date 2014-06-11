@@ -1,10 +1,22 @@
 #include "../include/SPScene.h"
 #include "../include/Input.h"
 #include "../include/Lista1.h"
+
+#include <GL/glui.h>
+
 #include <algorithm>
+
 using namespace std;
 
-MyScene::MyScene() : InteractiveScene(){
+extern int mainWindowID;
+
+static MyScene* _s;
+static void _resetPath(int){
+	_s->resetPath();
+}
+
+MyScene::MyScene() : InteractiveScene(), 
+	showTriangulation(1), showGraph(1), showTree(1), showFunnels(1), showNumbers(1){
 	points.push_back(vec2(300, 300)); //0
 	points.push_back(vec2(200, 300)); //1
 	points.push_back(vec2(250, 250)); //2
@@ -17,6 +29,22 @@ MyScene::MyScene() : InteractiveScene(){
 	for (int i : tris)
 		triangles.push_back(i);
 	dualGraph = getDualGraph(triangles);
+
+	GLUI* g = GLUI_Master.create_glui("Options");
+	g->add_checkbox("Show Triangulation", &showTriangulation);
+	g->add_checkbox("Show Graph", &showGraph);
+	g->add_checkbox("Show Tree", &showTree);
+	g->add_checkbox("Show Funnels", &showFunnels);
+	g->add_checkbox("Show Numbers", &showNumbers);
+	g->add_button("Reset path", -1, &_resetPath);
+	g->set_main_gfx_window(mainWindowID);
+
+	_s = this;
+}
+
+void MyScene::resetPath(){
+	testPoints.clear();
+	funnels.clear();
 }
 
 //BEGIN DRAWING =============================================================================
@@ -33,10 +61,14 @@ void MyScene::render(float delta){
 
 	glLineWidth(3);
 	drawPolygon();
-	drawGraph();
-	drawDFSTree();
-	drawFunnels();
-	drawVertexNumbers();
+	if (showGraph)
+		drawGraph();
+	if (showTree)
+		drawDFSTree();
+	if (showFunnels)
+		drawFunnels();
+	if (showNumbers)
+		drawVertexNumbers();
 	drawSP();
 }
 
@@ -86,15 +118,17 @@ void MyScene::drawPolygon(){
 		glEnd();
 	}
 
+	if (showTriangulation){
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	glBegin(GL_TRIANGLES);
-	glColor3f(1, 0, 0);
-	for (int i = 0; i < triangles.size(); i++)
-		glVertex2fv(points[triangles[i]].data());
-	glEnd();
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glBegin(GL_TRIANGLES);
+		glColor3f(1, 0, 0);
+		for (int i = 0; i < triangles.size(); i++)
+			glVertex2fv(points[triangles[i]].data());
+		glEnd();
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+	
 }
 
 void MyScene::drawGraph(){

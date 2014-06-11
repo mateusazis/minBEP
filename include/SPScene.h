@@ -12,6 +12,7 @@ public:
 	void onKey(char c);
 	void onMouseDown();
 
+	void resetPath();
 private:
 	void drawPolygon();
 	void drawGraph();
@@ -27,4 +28,6 @@ private:
 	std::vector<int> sp, triangles;
 	std::deque<std::deque<int>> funnels;
 	int currFunnel = 0;
+
+	int showTriangulation, showGraph, showTree, showFunnels, showNumbers;
 };
