@@ -155,6 +155,8 @@
     <ClCompile Include="src/main.cpp" />
     <ClCompile Include="src/Scene.cpp" />
     <ClCompile Include="src\Scenes.cpp" />
+    <ClCompile Include="src\SP.cpp" />
+    <ClCompile Include="src\SPScene.cpp" />
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +167,8 @@
     <ClInclude Include="include/GeneralProblems.h" />
     <ClInclude Include="include/Scene.h" />
     <ClInclude Include="include\Scenes.h" />
+    <ClInclude Include="include\SP.h" />
+    <ClInclude Include="include\SPScene.h" />
     <ClInclude Include="include\Utils.h" />
   </ItemGroup>
   <ItemGroup>
