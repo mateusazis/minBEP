@@ -59,9 +59,22 @@ void onMouse(int button, int pressed, int x, int y){
 }
 
 void onMouseMove(int x, int y){
-	int mouseX = x;
-	int mouseY = WINDOW_SIZE - y;
+	int tx, ty, tw, th;
+	GLUI_Master.get_viewport_area(&tx, &ty, &tw, &th);
+	glViewport(tx, ty, tw, th);
+
+
+	float aspectW = (float)WINDOW_SIZE / tw;
+	float aspecth = (float)WINDOW_SIZE / th;
+	int mouseX = (x - tx) * aspectW;
+	int mouseY = (WINDOW_SIZE - y - ty) * aspecth;
 	Input::updateMouse(mouseX, mouseY);
+}
+
+void onReshape(int w, int h){
+	int tx, ty, tw, th;
+	GLUI_Master.get_viewport_area(&tx, &ty, &tw, &th);
+	glViewport(tx, ty, tw, th);
 }
 /* FIM - Callbacks da Freeglut */
 
@@ -74,16 +87,19 @@ int main(int argc, char **argv){
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowSize(WINDOW_SIZE, WINDOW_SIZE);
+	glutInitWindowSize(WINDOW_SIZE+200, WINDOW_SIZE);
 	
 	mainWindowID = glutCreateWindow("Shortest Path");
 	glutDisplayFunc(display);
 	//glutIdleFunc(idle);
 	GLUI_Master.set_glutIdleFunc(idle);
-	glutKeyboardFunc(onKeyboard);
+	GLUI_Master.set_glutKeyboardFunc(onKeyboard);
+	GLUI_Master.set_glutMouseFunc(onMouse);
+	GLUI_Master.set_glutReshapeFunc(onReshape);
+	//glutKeyboardFunc(onKeyboard);
 	glutKeyboardUpFunc(onKeyboardUp);
 	glutPassiveMotionFunc(onMouseMove);
-	glutMouseFunc(onMouse);
+	//glutMouseFunc(onMouse);
 
 	glClearColor(0, 0, 0, 1);
 

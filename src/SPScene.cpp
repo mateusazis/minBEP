@@ -30,7 +30,7 @@ MyScene::MyScene() : InteractiveScene(),
 		triangles.push_back(i);
 	dualGraph = getDualGraph(triangles);
 
-	GLUI* g = GLUI_Master.create_glui("Options");
+	GLUI* g = GLUI_Master.create_glui_subwindow(mainWindowID, GLUI_SUBWINDOW_RIGHT);
 	g->add_checkbox("Show Triangulation", &showTriangulation);
 	g->add_checkbox("Show Graph", &showGraph);
 	g->add_checkbox("Show Tree", &showTree);
