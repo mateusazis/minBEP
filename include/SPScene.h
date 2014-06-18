@@ -3,9 +3,9 @@
 #include "SP.h"
 #include "Scene.h"
 
-class MyScene : public Scene {
+class SPScene : public Scene {
 public:
-	MyScene();
+	SPScene();
 
 	//Callbacks overrides
 	void render(float delta);
@@ -13,6 +13,7 @@ public:
 	void onMouseDown();
 
 	void resetPath();
+	void clear();
 private:
 	void onPointAdded();
 	vec2 getCenter(int triangleIndex);
@@ -33,4 +34,6 @@ private:
 	int currFunnel = 0;
 
 	int showTriangulation, showGraph, showTree, showFunnels, showNumbers;
+
+	int mode;
 };

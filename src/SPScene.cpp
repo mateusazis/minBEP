@@ -11,13 +11,19 @@ using namespace std;
 
 extern int mainWindowID;
 
-static MyScene* _s;
+static SPScene* _s;
 static void _resetPath(int){
 	_s->resetPath();
 }
 
-MyScene::MyScene() : Scene(),
-	showTriangulation(1), showGraph(0), showTree(0), showFunnels(0), showNumbers(1){
+static void _clear(int){
+	_s->clear();
+}
+
+enum Mode { CREATE_POLYGON, CREATE_PATH, EDIT_PATH };
+
+SPScene::SPScene() : Scene(),
+showTriangulation(1), showGraph(0), showTree(0), showFunnels(0), showNumbers(1), mode(CREATE_POLYGON){
 	points.push_back(vec2(300, 300)); //0
 	points.push_back(vec2(200, 300)); //1
 	points.push_back(vec2(250, 250)); //2
@@ -32,27 +38,35 @@ MyScene::MyScene() : Scene(),
 	dualGraph = getDualGraph(triangles);
 
 	GLUI* g = GLUI_Master.create_glui_subwindow(mainWindowID, GLUI_SUBWINDOW_RIGHT);
-	g->add_checkbox("Show Triangulation", &showTriangulation);
-	g->add_checkbox("Show Graph", &showGraph);
-	g->add_checkbox("Show Tree", &showTree);
-	g->add_checkbox("Show Funnels", &showFunnels);
-	g->add_checkbox("Show Numbers", &showNumbers);
-	g->add_button("Reset path", -1, &_resetPath);
+	GLUI_Panel* visibilityPanel = g->add_panel("Show");
+	g->add_checkbox_to_panel(visibilityPanel, "Triangulation", &showTriangulation);
+	g->add_checkbox_to_panel(visibilityPanel, "Graph", &showGraph);
+	g->add_checkbox_to_panel(visibilityPanel, "Tree", &showTree);
+	g->add_checkbox_to_panel(visibilityPanel, "Funnels", &showFunnels);
+	g->add_checkbox_to_panel(visibilityPanel, "Numbers", &showNumbers);
+	g->add_button("Clear polygon", -1, &_clear);
+	g->add_button("Clear path", -1, &_resetPath);
 	g->set_main_gfx_window(mainWindowID);
+
+	GLUI_Panel *panel = g->add_panel("Mode");
+	GLUI_RadioGroup* modesGroup = g->add_radiogroup_to_panel(panel, &this->mode);
+	g->add_radiobutton_to_group(modesGroup, "Create Polygon");
+	g->add_radiobutton_to_group(modesGroup, "Set Path");
+	g->add_radiobutton_to_group(modesGroup, "Live Edit Path");
 
 	_s = this;
 }
 
-void MyScene::resetPath(){
+void SPScene::resetPath(){
 	testPoints.clear();
 	funnels.clear();
 }
 
 //BEGIN DRAWING =============================================================================
 
-void MyScene::render(float delta){
+void SPScene::render(float delta){
 	if (testPoints.size() >= 2){
-		if (Input::checkKey('t')){
+		if (mode == EDIT_PATH){
 			testPoints[1] = Input::mousePosition();
 			funnels.clear();
 			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
@@ -73,7 +87,7 @@ void MyScene::render(float delta){
 	drawSP();
 }
 
-void MyScene::drawSP(){
+void SPScene::drawSP(){
 	if (testPoints.size() >= 2){
 		glBegin(GL_LINE_STRIP);
 		glColor3f(0.5f, 0.5f, 0.5f);
@@ -85,7 +99,7 @@ void MyScene::drawSP(){
 	}
 }
 
-void MyScene::drawVertexNumbers(){
+void SPScene::drawVertexNumbers(){
 	char temp1[3];
 	glColor3f(0, .75f, 0);
 	for (int i = 0; i < points.size(); i++){
@@ -102,7 +116,7 @@ void MyScene::drawVertexNumbers(){
 	}
 }
 
-void MyScene::drawPolygon(){
+void SPScene::drawPolygon(){
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	if (points.size() > 2){
 		glBegin(GL_TRIANGLES);
@@ -132,7 +146,7 @@ void MyScene::drawPolygon(){
 	
 }
 
-void MyScene::drawGraph(){
+void SPScene::drawGraph(){
 	glBegin(GL_LINES);
 	glColor3f(0, 0, 1);
 	for (int i = 0; i < dualGraph.size(); i++){
@@ -146,7 +160,7 @@ void MyScene::drawGraph(){
 	glEnd();
 }
 
-void MyScene::drawDFSTree(){
+void SPScene::drawDFSTree(){
 	if (testPoints.size() > 1){
 		vector<int> path = DepthFirstSearch(testPoints[0], testPoints[1], points.data(), dualGraph, triangles);
 		glColor3f(0, 1, 0);
@@ -158,7 +172,7 @@ void MyScene::drawDFSTree(){
 	}
 }
 
-void MyScene::drawFunnels(){
+void SPScene::drawFunnels(){
 	if (funnels.size() > 0){
 		glLineWidth(6);
 		glBegin(GL_LINE_STRIP);
@@ -178,12 +192,12 @@ void MyScene::drawFunnels(){
 
 //END DRAWING =============================================================================
 
-vec2 MyScene::getCenter(int triangleIndex){
+vec2 SPScene::getCenter(int triangleIndex){
 	triangleIndex *= 3;
 	return (points[triangles[triangleIndex]] + points[triangles[triangleIndex + 1]] + points[triangles[triangleIndex + 2]]) / 3.0f;
 }
 
-void MyScene::onPointAdded(){
+void SPScene::onPointAdded(){
 	triangles = earClippingTriangulate(points.data(), points.size());
 	dualGraph = getDualGraph(triangles);
 	if (testPoints.size() >= 2){
@@ -192,15 +206,7 @@ void MyScene::onPointAdded(){
 
 }
 
-void MyScene::onKey(char c){
-	if (c == 'r'){
-		points.clear();
-		testPoints.clear();
-		dualGraph.clear();
-		triangles.clear();
-		funnels.clear();
-		currFunnel = 0;
-	}
+void SPScene::onKey(char c){
 	if (Input::checkKeyDown('+'))
 		currFunnel = std::min<int>(currFunnel + 1, funnels.size() - 1);
 	if (Input::checkKeyDown('-'))
@@ -215,7 +221,16 @@ void MyScene::onKey(char c){
 		system("cls");
 }
 
-void MyScene::saveToFile(){
+void SPScene::clear(void){
+	points.clear();
+	testPoints.clear();
+	dualGraph.clear();
+	triangles.clear();
+	funnels.clear();
+	currFunnel = 0;
+}
+
+void SPScene::saveToFile(){
 	FILE* f = fopen("points", "wb");
 	int size = points.size();
 	fwrite(&size, sizeof(int), 1, f);
@@ -223,7 +238,7 @@ void MyScene::saveToFile(){
 	fclose(f);
 }
 
-void MyScene::loadFromFile(){
+void SPScene::loadFromFile(){
 	FILE* f = fopen("points", "rb");
 	int count;
 	fread(&count, sizeof(int), 1, f);
@@ -233,14 +248,18 @@ void MyScene::loadFromFile(){
 	onPointAdded();
 }
 
-void MyScene::onMouseDown(){
-	if (Input::checkKey('d')){
-		testPoints.push_back(Input::mousePosition());
+void SPScene::onMouseDown(){
+	if (mode == CREATE_PATH){
+		if (testPoints.size() < 2)
+			testPoints.push_back(Input::mousePosition());
+		else
+			testPoints[1] = Input::mousePosition();
+
 		if (testPoints.size() >= 2){
 			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
 		}
 	}
-	else {
+	else if(mode == CREATE_POLYGON){
 		points.push_back(Input::mousePosition());
 		onPointAdded();
 	}

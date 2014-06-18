@@ -113,7 +113,7 @@ int main(int argc, char **argv){
 	glMatrixMode(GL_PROJECTION);
 	glOrtho(0, windowWidth, 0, windowHeight, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
-	s = new MyScene();
+	s = new SPScene();
 
 	glutMainLoop();
 	return 0;
