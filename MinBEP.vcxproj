@@ -148,32 +148,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src/angel.cpp" />
-    <ClCompile Include="src/ConvexHull.cpp" />
     <ClCompile Include="src/Input.cpp" />
-    <ClCompile Include="src/InteractiveScene.cpp" />
-    <ClCompile Include="src/lista1.cpp" />
-    <ClCompile Include="src/Localization.cpp" />
+    <ClCompile Include="src/Geometry.cpp" />
     <ClCompile Include="src/main.cpp" />
     <ClCompile Include="src/Scene.cpp" />
-    <ClCompile Include="src\Scenes.cpp" />
     <ClCompile Include="src\SP.cpp" />
     <ClCompile Include="src\SPScene.cpp" />
-    <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include/angel.h" />
     <ClInclude Include="include/Input.h" />
-    <ClInclude Include="include/InteractiveScene.h" />
-    <ClInclude Include="include/lista1.h" />
-    <ClInclude Include="include/GeneralProblems.h" />
+    <ClInclude Include="include/Geometry.h" />
     <ClInclude Include="include/Scene.h" />
-    <ClInclude Include="include\Scenes.h" />
     <ClInclude Include="include\SP.h" />
     <ClInclude Include="include\SPScene.h" />
-    <ClInclude Include="include\Utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="exercícios.txt" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\1400003115_62723.ico" />

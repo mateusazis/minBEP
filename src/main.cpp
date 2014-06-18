@@ -1,6 +1,5 @@
 #include "../include/Input.h"
-#include "../include/lista1.h"
-#include "../include/GeneralProblems.h"
+#include "../include/Geometry.h"
 #include "../include/SPScene.h"
 
 #include <GL/freeglut.h>

@@ -1,11 +1,11 @@
-#include "../include/angel.h"
-#include "../include/GeneralProblems.h"
-#include <vector>
 #pragma once
 
+#include "../include/angel.h"
+#include "../include/Geometry.h"
+
+#include <vector>
 #include <deque>
 #include <set>
-#include <stack>
 
 typedef std::vector<std::set<int>> Graph;
 

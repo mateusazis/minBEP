@@ -1,9 +1,5 @@
-#include "../include/GeneralProblems.h"
 #include "../include/SP.h"
-#include "../include/lista1.h"
-#include <vector>
-#include <deque>
-#include <set>
+
 #include <stack>
 #include <algorithm>
 
@@ -74,7 +70,7 @@ static deque<int> makeFirstFunnel(vec2 src, const vec2* points, int indexA, int 
 	return resp;
 }
 
-static vec2 getFunnelPoint(vec2 src, const vec2* points, const deque<int> & funnel, int index){
+static vec2 getFunnelPoint(vec2 src, const vec2* points, const deque<int> & funnel, size_t index){
 	if (funnel[index] == -1)
 		return src;
 	return points[funnel[index]];

@@ -1,8 +1,9 @@
 #include "../include/SPScene.h"
 #include "../include/Input.h"
-#include "../include/Lista1.h"
+#include "../include/Geometry.h"
 
 #include <GL/glui.h>
+#include <GL/freeglut.h>
 
 #include <algorithm>
 
@@ -15,7 +16,7 @@ static void _resetPath(int){
 	_s->resetPath();
 }
 
-MyScene::MyScene() : InteractiveScene(), 
+MyScene::MyScene() : Scene(),
 	showTriangulation(1), showGraph(0), showTree(0), showFunnels(0), showNumbers(1){
 	points.push_back(vec2(300, 300)); //0
 	points.push_back(vec2(200, 300)); //1
@@ -238,6 +239,9 @@ void MyScene::onMouseDown(){
 		if (testPoints.size() >= 2){
 			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
 		}
-	} else
-		InteractiveScene::onMouseDown();
+	}
+	else {
+		points.push_back(Input::mousePosition());
+		onPointAdded();
+	}
 }
