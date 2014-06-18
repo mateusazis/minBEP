@@ -267,54 +267,74 @@ bool convex(vec2* polygon, int pointCount){
 	return true;
 }
 
+
+
 //Lista 1 - Exercícios sobre Polígonos - Questão 4
-static bool isCenterOfEar(vector<int> v, int i, vec2* points){
+static bool isCenterOfEar(const deque<int> & v, int i, const vec2* points, bool clockwise){
 	int size = v.size();
-	int previous = i - 1;
-	if (previous < 0)
-		previous += size;
+	int previous = (i + size - 1) % size;;
 	int next = (i + 1) % size;
 
 	vec2 vPrevious = points[v[previous]],
 		vI = points[v[i]],
 		vNext = points[v[next]];
 
-	if ((vPrevious - vI).crossSign(vNext - vI) < 0)
+	int expectedSign = clockwise ? 1 : -1;
+
+	if ((vPrevious - vI).crossSign(vNext - vI) == expectedSign){
 		return false;
+	}
 
 	for (int j = (next + 1) % size; j != previous; j = (j + 1) % size){
 		TriangleLocalization l = findInTriangle(points[v[j]], vPrevious, vI, vNext);
-		if (l == INSIDE)
+		if (l == INSIDE){
 			return false;
+		}
 	}
+
 	return true;
+}
+
+static bool isPolygonClockwise(const vec2* points, int count){
+	if (count >= 3){
+		vec2 v1 = points[1] - points[0], v2 = points[2] - points[0];
+		return v1.crossSign(v2) > 0;
+	}
+	return false; //less than 3 points, no orientation!
 }
 
 /*
 Nota: vértices do polígono devem estar no sentido horário!
 */
-vector<int> earClippingTriangulate(vec2 *points, int count){
+vector<int> earClippingTriangulate(const vec2 *points, int count){
 	vector<int> resp;
+	int polygonCount = std::max(0, count - 2);
 
 	//Cria uma cópia dos vértices, salvando os índices originais
-	vector<int> vertices;
+	deque<int> vertices;
 	for (int i = 0; i < count; i++)
 		vertices.push_back(i);
 
-	for (int i = 0; i < vertices.size() && vertices.size() >= 3; i++){
-		if (isCenterOfEar(vertices, i, points)){
-			//Sempre que um vértice, o anterior e o posterior formarem uma orelha, remover esse vértice do polígono.
-			int previous = i - 1;
-			if (previous < 0)
-				previous += vertices.size();
-			int next = (i + 1) % vertices.size();
-			resp.push_back(vertices[previous]);
-			resp.push_back(vertices[i]);
-			resp.push_back(vertices[next]);
-			vertices.erase(vertices.begin() + i);
-			i--;
+	bool clockwise = isPolygonClockwise(points, count);
+
+
+	while (resp.size() < polygonCount * 3){
+		for (int i = 0; i < vertices.size(); i++){
+			if (isCenterOfEar(vertices, i, points, clockwise)){
+				//Sempre que um vértice, o anterior e o posterior formarem uma orelha, remover esse vértice do polígono.
+				int previous = (i + vertices.size() - 1) % vertices.size();
+				int next = (i + 1) % vertices.size();
+				resp.push_back(vertices[previous]);
+				resp.push_back(vertices[i]);
+				resp.push_back(vertices[next]);
+				vertices.erase(vertices.begin() + i);
+				//i--;
+				break;
+			}
 		}
 	}
+
+	
 
 	return resp;
 }

@@ -13,7 +13,7 @@
 static Scene *s;
 static clock_t startT, endT;
 static float timeDiff;
-const int WINDOW_SIZE = 400;
+static int windowWidth = 400, windowHeight = 400;
 int mainWindowID;
 using namespace std;
 
@@ -64,10 +64,10 @@ void onMouseMove(int x, int y){
 	glViewport(tx, ty, tw, th);
 
 
-	float aspectW = (float)WINDOW_SIZE / tw;
-	float aspecth = (float)WINDOW_SIZE / th;
+	float aspectW = (float)windowWidth / tw;
+	float aspecth = (float)windowHeight / th;
 	int mouseX = (x - tx) * aspectW;
-	int mouseY = (WINDOW_SIZE - y - ty) * aspecth;
+	int mouseY = (windowHeight - y - ty) * aspecth;
 	Input::updateMouse(mouseX, mouseY);
 }
 
@@ -75,6 +75,13 @@ void onReshape(int w, int h){
 	int tx, ty, tw, th;
 	GLUI_Master.get_viewport_area(&tx, &ty, &tw, &th);
 	glViewport(tx, ty, tw, th);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, tw, 0, th, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	windowWidth = tw;
+	windowHeight = th;
 }
 /* FIM - Callbacks da Freeglut */
 
@@ -87,7 +94,7 @@ int main(int argc, char **argv){
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowSize(WINDOW_SIZE+200, WINDOW_SIZE);
+	glutInitWindowSize(windowWidth+200, windowHeight);
 	
 	mainWindowID = glutCreateWindow("Shortest Path");
 	glutDisplayFunc(display);
@@ -104,9 +111,8 @@ int main(int argc, char **argv){
 	glClearColor(0, 0, 0, 1);
 
 	
-	float hSize = WINDOW_SIZE / 2.0f;
 	glMatrixMode(GL_PROJECTION);
-	glOrtho(0, WINDOW_SIZE, 0, WINDOW_SIZE, -hSize, hSize);
+	glOrtho(0, windowWidth, 0, windowHeight, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	s = new MyScene();
 

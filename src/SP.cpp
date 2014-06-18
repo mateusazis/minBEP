@@ -204,7 +204,7 @@ Graph getDualGraph(const vector<int> & triangulation){
 }
 
 vector<int> SP(vec2 src, vec2 dest, const vec2* points, int count, deque<deque<int>> & funnels){
-	vector<int> triangles = divideAndConquerTriangulate(points, count);
+	vector<int> triangles = earClippingTriangulate(points, count);
 	Graph g = getDualGraph(triangles);
 	vector<int> tree = DepthFirstSearch(src, dest, points, g, triangles);
 

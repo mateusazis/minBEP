@@ -27,7 +27,7 @@ bool convex(vec2* polygon, int pointCount);
 std::vector<int> divideAndConquerTriangulate(const vec2 *points, int count);
 
 //Questão 4
-std::vector<int> earClippingTriangulate(vec2 *points, int count);
+std::vector<int> earClippingTriangulate(const vec2 *points, int count);
 
 
 

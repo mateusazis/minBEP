@@ -16,7 +16,7 @@ static void _resetPath(int){
 }
 
 MyScene::MyScene() : InteractiveScene(), 
-	showTriangulation(1), showGraph(1), showTree(1), showFunnels(1), showNumbers(1){
+	showTriangulation(1), showGraph(0), showTree(0), showFunnels(0), showNumbers(1){
 	points.push_back(vec2(300, 300)); //0
 	points.push_back(vec2(200, 300)); //1
 	points.push_back(vec2(250, 250)); //2
@@ -159,6 +159,7 @@ void MyScene::drawDFSTree(){
 
 void MyScene::drawFunnels(){
 	if (funnels.size() > 0){
+		glLineWidth(6);
 		glBegin(GL_LINE_STRIP);
 		glColor3f(.3f, .2f, 1);
 		for (int i : funnels[currFunnel]){
@@ -170,6 +171,7 @@ void MyScene::drawFunnels(){
 			glVertex2fv(v.data());
 		}
 		glEnd();
+		glLineWidth(3);
 	}
 }
 
@@ -181,7 +183,7 @@ vec2 MyScene::getCenter(int triangleIndex){
 }
 
 void MyScene::onPointAdded(){
-	triangles = divideAndConquerTriangulate(points.data(), points.size());
+	triangles = earClippingTriangulate(points.data(), points.size());
 	dualGraph = getDualGraph(triangles);
 	if (testPoints.size() >= 2){
 		sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
@@ -207,6 +209,9 @@ void MyScene::onKey(char c){
 		saveToFile();
 	if (Input::checkKeyDown('l'))
 		loadFromFile();
+
+	if (c == 'c')
+		system("cls");
 }
 
 void MyScene::saveToFile(){

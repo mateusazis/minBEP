@@ -275,7 +275,7 @@ MetricsScene::MetricsScene() : DivideAndConquerTriangulationScene(), funcIndex(0
 	glPointSize(5);
 	funcs[0] = incrementalTriangulate;
 	//funcs[1] = divideAndConquerTriangulate;
-	funcs[2] = earClippingTriangulate;
+	//funcs[2] = earClippingTriangulate;
 }
 
 void MetricsScene::render(float delta){
