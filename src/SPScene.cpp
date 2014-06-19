@@ -69,12 +69,13 @@ void SPScene::render(){
 			testPoints[1] = Input::mousePosition();
 			funnels.clear();
 			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);
-			currFunnel = 0;
+			currFunnel = max<int>(0, (min<int>(funnels.size() - 1, currFunnel)));
 		}
 	}
 
-	glLineWidth(3);
+	
 	drawPolygon();
+	glLineWidth(3);
 	if (showGraph)
 		drawGraph();
 	if (showTree)
@@ -134,7 +135,7 @@ void SPScene::drawPolygon(){
 
 	if (showTriangulation){
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+		glLineWidth(2);
 		glBegin(GL_TRIANGLES);
 		glColor3f(1, 0, 0);
 		for (int i = 0; i < triangles.size(); i++)
@@ -227,6 +228,7 @@ void SPScene::clear(void){
 	triangles.clear();
 	funnels.clear();
 	currFunnel = 0;
+	glutPostRedisplay();
 }
 
 void SPScene::saveToFile(){

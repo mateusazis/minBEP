@@ -99,7 +99,13 @@ int main(int argc, char **argv){
 
 	glClearColor(0, 0, 0, 1);
 
-	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_POLYGON_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
 	glMatrixMode(GL_PROJECTION);
 	glOrtho(0, windowWidth, 0, windowHeight, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
