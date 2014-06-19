@@ -20,7 +20,7 @@ static void _clear(int){
 	_s->clear();
 }
 
-enum Mode { CREATE_POLYGON, CREATE_PATH, EDIT_PATH };
+enum Mode { CREATE_POLYGON, EDIT_PATH };
 
 SPScene::SPScene() : Scene(),
 showTriangulation(1), showGraph(0), showTree(0), showFunnels(0), showNumbers(1), mode(CREATE_POLYGON){
@@ -52,7 +52,6 @@ showTriangulation(1), showGraph(0), showTree(0), showFunnels(0), showNumbers(1),
 	GLUI_RadioGroup* modesGroup = g->add_radiogroup_to_panel(panel, &this->mode);
 	g->add_radiobutton_to_group(modesGroup, "Create Polygon");
 	g->add_radiobutton_to_group(modesGroup, "Set Path");
-	g->add_radiobutton_to_group(modesGroup, "Live Edit Path");
 
 	_s = this;
 }
@@ -64,7 +63,7 @@ void SPScene::resetPath(){
 
 //BEGIN DRAWING =============================================================================
 
-void SPScene::render(float delta){
+void SPScene::render(){
 	if (testPoints.size() >= 2){
 		if (mode == EDIT_PATH){
 			testPoints[1] = Input::mousePosition();
@@ -249,11 +248,10 @@ void SPScene::loadFromFile(){
 }
 
 void SPScene::onMouseDown(){
-	if (mode == CREATE_PATH){
+	if (mode == EDIT_PATH){
 		if (testPoints.size() < 2)
-			testPoints.push_back(Input::mousePosition());
-		else
-			testPoints[1] = Input::mousePosition();
+			testPoints.resize(2);
+		testPoints[0] = testPoints[1] = Input::mousePosition();
 
 		if (testPoints.size() >= 2){
 			sp = SP(testPoints[0], testPoints[1], points.data(), points.size(), funnels);

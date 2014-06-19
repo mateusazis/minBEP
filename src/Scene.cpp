@@ -10,7 +10,7 @@ Scene::~Scene()
 {
 }
 
-void Scene::render(float delta)
+void Scene::render()
 {
 }
 

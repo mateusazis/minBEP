@@ -8,30 +8,17 @@
 #include <ctime>
 #include <clocale>
 
+using namespace std;
 
 static Scene *s;
-static clock_t startT, endT;
-static float timeDiff;
 static int windowWidth = 400, windowHeight = 400;
 int mainWindowID;
-using namespace std;
 
 /* INÍCIO - Callbacks da Freeglut */
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
-	s->render(timeDiff);
+	s->render();
 	glutSwapBuffers();
-}
-
-void idle(){
-	endT = clock();
-	timeDiff = (endT - startT) / ((float)CLOCKS_PER_SEC);
-
-	startT = endT;
-
-	//display();
-	glutSetWindow(mainWindowID);
-	glutPostRedisplay();
 }
 
 void onKeyboard(unsigned char c, int x, int y){
@@ -41,6 +28,7 @@ void onKeyboard(unsigned char c, int x, int y){
 		exit(0);
 	else
 		s->onKey(c);
+	glutPostRedisplay();
 }
 
 void onKeyboardUp(unsigned char c, int x, int y){
@@ -50,11 +38,13 @@ void onKeyboardUp(unsigned char c, int x, int y){
 		exit(0);
 	else
 		s->onKey(c);
+	glutPostRedisplay();
 }
 
 void onMouse(int button, int pressed, int x, int y){
 	if (pressed == 1)
 		s->onMouseDown();
+	glutPostRedisplay();
 }
 
 void onMouseMove(int x, int y){
@@ -68,6 +58,7 @@ void onMouseMove(int x, int y){
 	int mouseX = (x - tx) * aspectW;
 	int mouseY = (windowHeight - y - ty) * aspecth;
 	Input::updateMouse(mouseX, mouseY);
+	glutPostRedisplay();
 }
 
 void onReshape(int w, int h){
@@ -81,6 +72,7 @@ void onReshape(int w, int h){
 	glMatrixMode(GL_MODELVIEW);
 	windowWidth = tw;
 	windowHeight = th;
+	glutPostRedisplay();
 }
 /* FIM - Callbacks da Freeglut */
 
@@ -88,7 +80,6 @@ void onReshape(int w, int h){
 
 int main(int argc, char **argv){
 	setlocale(LC_ALL, "Portuguese");
-	startT = endT = clock();
 	srand((unsigned int)time(NULL));
 
 	glutInit(&argc, argv);
@@ -98,7 +89,6 @@ int main(int argc, char **argv){
 	mainWindowID = glutCreateWindow("Shortest Path");
 	glutDisplayFunc(display);
 	//glutIdleFunc(idle);
-	GLUI_Master.set_glutIdleFunc(idle);
 	GLUI_Master.set_glutKeyboardFunc(onKeyboard);
 	GLUI_Master.set_glutMouseFunc(onMouse);
 	GLUI_Master.set_glutReshapeFunc(onReshape);

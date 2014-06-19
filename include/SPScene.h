@@ -8,7 +8,7 @@ public:
 	SPScene();
 
 	//Callbacks overrides
-	void render(float delta);
+	void render();
 	void onKey(char c);
 	void onMouseDown();
 
